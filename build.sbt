@@ -6,17 +6,17 @@ val baseSettings = Seq(
 val compilerOptions = Seq(
   "-deprecation",
   "-encoding", "UTF-8",
-  "-Xlint",
   "-feature",
   "-language:higherKinds",
+  "-target:jvm-1.8",
   "-unchecked",
+  "-Xlint",
+  "-Xfuture",
+  "-Xfatal-warnings",
   "-Yno-adapted-args",
   "-Ywarn-dead-code",
   "-Ywarn-numeric-widen",
-  "-Ywarn-unused-import",
-  "-Xfuture",
-  "-target:jvm-1.8",
-  "-Xfatal-warnings"
+  "-Ywarn-unused-import"
 )
 
 val buildSettings = Seq(
@@ -31,7 +31,16 @@ val buildSettings = Seq(
 
   resolvers += Resolver.typesafeRepo("releases"),
 
-  //libraryDependencies ++= Seq(),
+  libraryDependencies ++= Seq(
+    "com.github.finagle" %% "finch-core"    % "0.10.0",
+    "com.github.finagle" %% "finch-circe"   % "0.10.0",
+    "io.circe"           %% "circe-generic" % "0.4.1" exclude("org.typelevel", "cats"),
+    "org.typelevel"      %% "cats"          % "0.6.+",
+    //logging
+    "ch.qos.logback" % "logback-core"    % "1.1.7",
+    "ch.qos.logback" % "logback-classic" % "1.1.7",
+    "org.slf4j"      % "slf4j-api"       % "1.7.21"
+  ),
   
   doctestTestFramework := DoctestTestFramework.ScalaTest,
   doctestWithDependencies := false
