@@ -3,7 +3,7 @@ package net.randallalexander.restaurant.chooser.model
 import io.circe.{Decoder, Encoder}
 import io.circe.generic.semiauto._
 
-case class Hello(name: String, from: Seq[String])
+case class Hello(name: String, from: List[String])
 
 
 object Hello {

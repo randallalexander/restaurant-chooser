@@ -1,6 +1,7 @@
 *.class
 *.log
 **/target
+src/main/resources/application.conf
 
 # sbt specific
 .cache

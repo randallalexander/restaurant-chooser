@@ -34,8 +34,9 @@ val buildSettings = Seq(
   libraryDependencies ++= Seq(
     "com.github.finagle" %% "finch-core"    % "0.10.0",
     "com.github.finagle" %% "finch-circe"   % "0.10.0",
-    "io.circe"           %% "circe-generic" % "0.4.1" exclude("org.typelevel", "cats"),
-    "org.typelevel"      %% "cats"          % "0.6.+",
+    "io.circe"           %% "circe-generic" % "0.4.1",/* exclude("org.typelevel", "cats"),
+    "org.typelevel"      %% "cats"          % "0.6.+",*/
+    "com.typesafe" % "config" % "1.3.0",
     //logging
     "ch.qos.logback" % "logback-core"    % "1.1.7",
     "ch.qos.logback" % "logback-classic" % "1.1.7",
