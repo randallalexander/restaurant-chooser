@@ -3,7 +3,7 @@ package net.randallalexander.restaurant.chooser.model
 import io.circe.{Decoder, Encoder}
 import io.circe.generic.semiauto._
 
-case class Restaurant (id:Long, name:String)
+case class Restaurant (id:Long, name:String, tags:Seq[String])
 
 object Restaurant {
   implicit val restaurantDecoder: Decoder[Restaurant] = deriveDecoder[Restaurant]

@@ -28,12 +28,12 @@ object Api {
     }
   def chooseApi() = chooseRestaurant
 
-  def chooseRestaurant: Endpoint[Restaurant] = get("v1" :: "choose" :: "restaurant" :: params("who")) { (who:Seq[String]) =>
-    chooseLikedRestaurant(who).map(Ok).getOrElse(NotFound(new RuntimeException("Users have no restaurants in common.")))
+  def chooseRestaurant: Endpoint[Restaurant] = get("v1" :: "choose" :: "restaurant" :: params("who") :: params("tags")) { (who:Seq[String], tags:Seq[String]) =>
+    chooseLikedRestaurant(who,tags).map(Ok).getOrElse(NotFound(new RuntimeException("Users have no restaurants in common.")))
   }
 
-  def chooseLikedRestaurant(who: Seq[String]): Option[Restaurant] = {
-    val likedRest = File.getLikedRestaurant(who).toList
+  def chooseLikedRestaurant(who: Seq[String], tags: Seq[String]): Option[Restaurant] = {
+    val likedRest = File.getLikedRestaurant(who,tags).toList
     likedRest match {
       case Nil => None
       case liked =>

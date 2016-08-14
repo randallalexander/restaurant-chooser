@@ -12,11 +12,13 @@ object File {
 
   val config = ConfigFactory.load()
 
-  private val usersConfig = config.getConfigList("data.users")
+  private val dataConfig = config.getConfig("data")
 
-  private val restaurantConfig = config.getConfigList("data.restaurants")
+  private val usersConfig = dataConfig.getConfigList("users")
 
-  val getUsers:List[User] = usersConfig.toList.map{
+  private val restaurantConfig = dataConfig.getConfigList("restaurants")
+
+  val getUsers: List[User] = usersConfig.toList.map {
     config =>
       User(
         name = config.getString("name"),
@@ -24,26 +26,42 @@ object File {
         dislikes = config.getLongList("dislikes").toList.map(_.toLong)
       )
   }
-  
-  val getRestaurants:List[Restaurant] = restaurantConfig.toList.map {
+
+  val getRestaurants: Map[Long,Restaurant] = restaurantConfig.toList.map {
     config =>
       Restaurant(
         id = config.getLong("id"),
-        name = config.getString("name")
+        name = config.getString("name"),
+        tags = config.getStringList("tags")
       )
-  }
-  
-  def getLikedRestaurant(names:Seq[String]): Set[Restaurant] = {
+  }.map { rest => rest.id -> rest }.toMap
+
+  //TODO:make this a service...if I go to a real db then I won't have to move this to a service(possibly)
+  def getLikedRestaurant(names: Seq[String], tagFilter: Seq[String]): Seq[Restaurant] = {
     val matchingUsers = getUsers.filter(
       user =>
         names.contains(user.name)
     )
-    val allLikes = matchingUsers.flatMap(_.likes).toSet
-    val allDislikes = matchingUsers.flatMap(_.dislikes).toSet
+    val allRestaurants = getRestaurants.keys.toList//get all restaurants
+    /*
+       If a user likes a restaurant, then that id gets added to the eligible list and NOT dedupped.  Simple ranking
+       system so the more people like a restaurant the more it shows up say neutral (not in liked or disliked) feelings.
+     */
+    val allLikes = matchingUsers.flatMap(_.likes)
+    val allDislikes = matchingUsers.flatMap(_.dislikes)
+    val filteredByLikes = (allRestaurants ++ allLikes).filterNot(allDislikes.contains)
 
-    val restaurantMap = getRestaurants.map{rest => rest.id -> rest}.toMap
+    tagFilter match {
+      case Nil => filteredByLikes.flatMap(getRestaurants.get)
+      case _ => filteredByLikes.filter(containsTag(_:Long,tagFilter)).flatMap(getRestaurants.get)
+    }
+  }
 
-    allLikes.diff(allDislikes).flatMap(id => restaurantMap.get(id))
+  private def containsTag(id:Long, tags:Seq[String]):Boolean = {
+    getRestaurants.get(id).map {
+        restaurant =>
+          restaurant.tags.intersect(tags).size > 0
+      }.getOrElse(false)
   }
 
 }
