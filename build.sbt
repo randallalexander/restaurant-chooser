@@ -32,20 +32,17 @@ val buildSettings = Seq(
   resolvers ++= Seq(Resolver.typesafeRepo("releases"), "twttr" at "https://maven.twttr.com/"),
 
   libraryDependencies ++= Seq(
-    "com.github.finagle" %% "finch-core"     % "0.10.0",
-    "com.github.finagle" %% "finch-circe"    % "0.10.0",
-    "com.twitter"        %% "twitter-server" % "1.20.0",
-    "com.twitter"        %% "finagle-stats"  % "6.35.0",//monitoring
+    "com.github.finagle" %% "finch-core"     % "0.11.0-M2",
+    "com.github.finagle" %% "finch-circe"    % "0.11.0-M2",
+    "com.twitter"        %% "twitter-server" % "1.22.0",
+    "com.twitter"        %% "finagle-stats"  % "6.37.0",//monitoring
 
-    "io.circe"           %% "circe-generic"  % "0.4.1",
+    "io.circe"           %% "circe-generic"  % "0.5.0-M2",
     //"com.twitter" %% "util-logging" % "6.35.0",
 
     "com.typesafe" % "config" % "1.3.0",
     //logging
     "ch.qos.logback" % "logback-classic" % "1.1.7"
-
-    //"org.slf4j"      % "slf4j-api"       % "1.7.21"
-  /* */
   ),
   
   doctestTestFramework := DoctestTestFramework.ScalaTest,
