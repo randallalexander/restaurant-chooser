@@ -44,7 +44,7 @@ object Api {
   }
 
   def chooseLikedRestaurant(who: Seq[String], tags: Seq[String]): Task[Option[Restaurant]] = {
-    File.getLikedRestaurantTask(who, tags).map {
+    File.getLikedRestaurant(who, tags).map {
       likedRestaurants =>
         likedRestaurants.toList match {
           case Nil => None

@@ -37,30 +37,26 @@ object File {
       )
   }.map { rest => rest.id -> rest }.toMap
 
-  def getLikedRestaurantTask(names: Seq[String], tagFilter: Seq[String]): Task[Seq[Restaurant]] = {
-    Task {
-      getLikedRestaurant(names,tagFilter)
-    }
-  }
-
   //TODO:make this a service...if I go to a real db then I won't have to move this to a service(possibly)
-  def getLikedRestaurant(names: Seq[String], tagFilter: Seq[String]): Seq[Restaurant] = {
-    val matchingUsers = getUsers.filter(
-      user =>
-        names.contains(user.name)
-    )
-    val allRestaurants = getRestaurants.keys.toList//get all restaurants
-    /*
+  def getLikedRestaurant(names: Seq[String], tagFilter: Seq[String]): Task[Seq[Restaurant]] = {
+    Task {
+      val matchingUsers = getUsers.filter(
+        user =>
+          names.contains(user.name)
+      )
+      val allRestaurants = getRestaurants.keys.toList //get all restaurants
+      /*
        If a user likes a restaurant, then that id gets added to the eligible list and NOT dedupped.  Simple ranking
        system so the more people like a restaurant the more it shows up say neutral (not in liked or disliked) feelings.
      */
-    val allLikes = matchingUsers.flatMap(_.likes)
-    val allDislikes = matchingUsers.flatMap(_.dislikes)
-    val filteredByLikes = (allRestaurants ++ allLikes).filterNot(allDislikes.contains)
+      val allLikes = matchingUsers.flatMap(_.likes)
+      val allDislikes = matchingUsers.flatMap(_.dislikes)
+      val filteredByLikes = (allRestaurants ++ allLikes).filterNot(allDislikes.contains)
 
-    tagFilter match {
-      case Nil => filteredByLikes.flatMap(getRestaurants.get)
-      case _ => filteredByLikes.filter(containsTag(_:Long,tagFilter)).flatMap(getRestaurants.get)
+      tagFilter match {
+        case Nil => filteredByLikes.flatMap(getRestaurants.get)
+        case _ => filteredByLikes.filter(containsTag(_: Long, tagFilter)).flatMap(getRestaurants.get)
+      }
     }
   }
 
