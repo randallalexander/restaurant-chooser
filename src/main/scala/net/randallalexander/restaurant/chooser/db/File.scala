@@ -1,6 +1,7 @@
 package net.randallalexander.restaurant.chooser.db
 
 import com.typesafe.config.ConfigFactory
+import monix.eval.Task
 import net.randallalexander.restaurant.chooser.model.{Restaurant, User}
 
 import scala.collection.JavaConversions._
@@ -35,6 +36,12 @@ object File {
         tags = config.getStringList("tags")
       )
   }.map { rest => rest.id -> rest }.toMap
+
+  def getLikedRestaurantTask(names: Seq[String], tagFilter: Seq[String]): Task[Seq[Restaurant]] = {
+    Task {
+      getLikedRestaurant(names,tagFilter)
+    }
+  }
 
   //TODO:make this a service...if I go to a real db then I won't have to move this to a service(possibly)
   def getLikedRestaurant(names: Seq[String], tagFilter: Seq[String]): Seq[Restaurant] = {
