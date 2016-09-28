@@ -7,7 +7,7 @@ import com.twitter.server.TwitterServer
 import com.twitter.util.Await
 import org.slf4j.LoggerFactory
 
-object Boot extends TwitterServer{
+object Boot extends TwitterServer {
   val logger = LoggerFactory.getLogger(this.getClass)
 
   val server: ListeningServer = Http.server

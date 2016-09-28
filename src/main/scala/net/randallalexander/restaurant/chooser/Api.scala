@@ -10,9 +10,11 @@ import monix.execution.Scheduler.Implicits.global
 import monix.eval.Task
 import net.randallalexander.restaurant.chooser.db.File
 import net.randallalexander.restaurant.chooser.errors.ErrorHandler
+import net.randallalexander.restaurant.chooser.experimental.MObservable
 import net.randallalexander.restaurant.chooser.filter.RequestLoggingFilter
 import net.randallalexander.restaurant.chooser.utils.FutureConversion._
 import net.randallalexander.restaurant.chooser.model.{Hello, Restaurant}
+
 import scala.util.Random
 
 object Api {
@@ -43,6 +45,19 @@ object Api {
     chooseLikedRestaurant(who, tags).map(_.map(Ok).getOrElse(NotFound(new RuntimeException("Users have no restaurants in common.")))).runAsync.asTwitter
   }
 
+  /*
+  random experimental methods...because I can not because I should do it this way
+   */
+  def experimentalRoutes() = observerTest
+
+  def observerTest: Endpoint[String] = get("v1" :: "observable" :: params("emit")) { emit: Seq[String] =>
+    MObservable.observableTestRunner(emit)
+    Ok("Launched...")
+  }
+
+  /*
+  Move me
+   */
   def chooseLikedRestaurant(who: Seq[String], tags: Seq[String]): Task[Option[Restaurant]] = {
     File.getLikedRestaurant(who, tags).map {
       likedRestaurants =>
@@ -55,7 +70,7 @@ object Api {
     }
   }
 
-  private def api = helloApi() :+: chooseApi()
+  private def api = helloApi() :+: chooseApi() :+: experimentalRoutes()
 
   /*
   TODO: Look into effective use of MethodRequiredFilter
