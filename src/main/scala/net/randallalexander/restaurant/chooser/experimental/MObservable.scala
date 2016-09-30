@@ -35,6 +35,14 @@ object MObservable {
         logger.info(s"CONSUMER::$element")
     }
     observable.runWith(consumer).runAsync
+
+
+    /*
+    //this should be interesting once I get some time to hook up
+
+    Observable.create[String](OverflowStrategy.Unbounded) { downstream =>
+    }
+    */
   }
 
   private def subscriber(id: Int) = new org.reactivestreams.Subscriber[String] {
