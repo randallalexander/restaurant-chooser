@@ -4,7 +4,7 @@ import com.twitter.util.Future
 import monix.execution.Ack
 import monix.execution.Ack.Continue
 import monix.execution.Scheduler.Implicits.global
-import monix.reactive.{Observable, Observer, OverflowStrategy}
+import monix.reactive.{Consumer, Observable, Observer, OverflowStrategy}
 import net.randallalexander.restaurant.chooser.utils.FutureConversion._
 import org.reactivestreams.Subscription
 import org.slf4j.LoggerFactory
@@ -29,6 +29,12 @@ object MObservable {
       observable.subscribe(observableAction(1)(_)))
     rPublisher.subscribe(subscriber(0))
     rPublisher.subscribe(subscriber(1))
+
+    val consumer = Consumer.foreachParallel[String](2) {
+      element =>
+        logger.info(s"CONSUMER::$element")
+    }
+    observable.runWith(consumer).runAsync
   }
 
   private def subscriber(id: Int) = new org.reactivestreams.Subscriber[String] {
