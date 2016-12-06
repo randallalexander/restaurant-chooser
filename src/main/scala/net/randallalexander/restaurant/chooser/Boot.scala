@@ -15,13 +15,10 @@ object Boot extends TwitterServer {
     .withStatsReceiver(statsReceiver)
     .serve("0.0.0.0:8080", Api.apiService)
 
-  private def shutdown(): Unit = {
-    logger.info("Shutting down...")
-    Await.ready(server.close())
-  }
   def main(): Unit = {
     logger.info("Booting...")
-    onExit {server.close()}
+    onExit {server.close(); ()}
     Await.ready(adminHttpServer)
+    ()
   }
 }

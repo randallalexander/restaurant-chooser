@@ -16,8 +16,12 @@ object FutureConversion {
     def asScala(implicit e: ExecutionContext): SFuture[A] = {
       val p: SPromise[A] = SPromise()
       f.respond {
-        case Return(value) => p.success(value)
-        case Throw(exception) => p.failure(exception)
+        case Return(value) =>
+          p.success(value)
+          ()
+        case Throw(exception) =>
+          p.failure(exception)
+          ()
       }
 
       p.future

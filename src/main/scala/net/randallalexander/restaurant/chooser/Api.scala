@@ -10,7 +10,6 @@ import monix.execution.Scheduler.Implicits.global
 import monix.eval.Task
 import net.randallalexander.restaurant.chooser.db.File
 import net.randallalexander.restaurant.chooser.errors.ErrorHandler
-import net.randallalexander.restaurant.chooser.experimental.MObservable
 import net.randallalexander.restaurant.chooser.filter.RequestLoggingFilter
 import net.randallalexander.restaurant.chooser.utils.FutureConversion._
 import net.randallalexander.restaurant.chooser.model.{Hello, Restaurant}
@@ -46,16 +45,6 @@ object Api {
   }
 
   /*
-  random experimental methods...because I can not because I should do it this way
-   */
-  def experimentalRoutes() = observerTest
-
-  def observerTest: Endpoint[String] = get("v1" :: "observable" :: params("emit")) { emit: Seq[String] =>
-    MObservable.observableTestRunner(emit)
-    Ok("Launched...")
-  }
-
-  /*
   Move me
    */
   def chooseLikedRestaurant(who: Seq[String], tags: Seq[String]): Task[Option[Restaurant]] = {
@@ -70,7 +59,7 @@ object Api {
     }
   }
 
-  private def api = helloApi() :+: chooseApi() :+: experimentalRoutes()
+  private def api = helloApi() :+: chooseApi()
 
   /*
   TODO: Look into effective use of MethodRequiredFilter

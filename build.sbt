@@ -15,9 +15,24 @@ val compilerOptions = Seq(
   "-Xfatal-warnings",
   "-Yno-adapted-args",
   "-Ywarn-dead-code",
+  "-Ywarn-inaccessible",
   "-Ywarn-numeric-widen",
-  "-Ywarn-unused-import"
+  "-Ywarn-unused",
+  "-Ywarn-unused-import",
+  "-Ywarn-value-discard"
 )
+
+val finchVersion = "0.11.0-M4"
+val twitterServerVersion = "1.20.0"
+val finagleVersion = "6.35.0"
+val circeVersion = "0.5.3"
+val monixVersion = "2.0.2"
+/*
+  Cats version driven by finch.  Careful
+  when upgrading due to binary incompatibilities
+  between Cats 0.5.x and 0.6.x
+ */
+
 
 val buildSettings = Seq(
   javacOptions ++= Seq("-source", "1.8", "-target", "1.8", "-Xlint"),
@@ -32,17 +47,16 @@ val buildSettings = Seq(
   resolvers ++= Seq(Resolver.typesafeRepo("releases"), "twttr" at "https://maven.twttr.com/"),
 
   libraryDependencies ++= Seq(
-    "com.github.finagle" %% "finch-core"     % "0.11.0-M3",
-    "com.github.finagle" %% "finch-circe"    % "0.11.0-M3",
-    "com.twitter"        %% "twitter-server" % "1.23.0",
-    "com.twitter"        %% "finagle-stats"  % "6.38.0",//monitoring
+    "com.github.finagle" %% "finch-core"     % finchVersion,
+    "com.github.finagle" %% "finch-circe"    % finchVersion,
+    "com.twitter"        %% "twitter-server" % twitterServerVersion,
+    "com.twitter"        %% "finagle-stats"  % finagleVersion,//monitoring
 
-    "io.circe"           %% "circe-generic"  % "0.5.2",
-    //"com.twitter" %% "util-logging" % "6.35.0",
+    "io.circe"           %% "circe-generic"  % circeVersion,
 
     //experimental
-    "io.monix" %% "monix" % "2.0.2",
-    "io.monix" %% "monix-cats" % "2.0.2",
+    "io.monix" %% "monix" % monixVersion,
+    "io.monix" %% "monix-cats" % monixVersion,
     //config
     "com.typesafe" % "config" % "1.3.1",
     //logging
@@ -53,7 +67,7 @@ val buildSettings = Seq(
   doctestWithDependencies := false
   // Uncomment to enable benchmarking.
   //enablePlugins(JmhPlugin)
-  // Uncomment to enable WartRemover linting.
+  //enable WartRemover linting.
   //wartremoverWarnings in (Compile, compile) ++= Warts.allBut(Wart.Throw)
 )
 

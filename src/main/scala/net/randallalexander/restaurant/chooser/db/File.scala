@@ -1,6 +1,8 @@
 package net.randallalexander.restaurant.chooser.db
 
-import com.typesafe.config.ConfigFactory
+import java.util
+
+import com.typesafe.config.{Config, ConfigFactory}
 import monix.eval.Task
 import net.randallalexander.restaurant.chooser.model.{Restaurant, User}
 
@@ -11,13 +13,13 @@ Yes, Yes using config as a mini-database is bad, but will work well enough to ge
  */
 object File {
 
-  val config = ConfigFactory.load()
+  private val config: Config = ConfigFactory.load()
 
-  private val dataConfig = config.getConfig("data")
+  private val dataConfig: Config = config.getConfig("data")
 
-  private val usersConfig = dataConfig.getConfigList("users")
+  private val usersConfig: util.List[_ <: Config] = dataConfig.getConfigList("users")
 
-  private val restaurantConfig = dataConfig.getConfigList("restaurants")
+  private val restaurantConfig: util.List[_ <: Config] = dataConfig.getConfigList("restaurants")
 
   val getUsers: List[User] = usersConfig.toList.map {
     config =>
