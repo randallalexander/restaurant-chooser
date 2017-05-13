@@ -1,3 +1,6 @@
+import sbt.Keys.resolvers
+import sbt.Resolver
+
 val baseSettings = Seq(
   organization := "net.randallalexander",
   scalaVersion := "2.11.8"
@@ -19,8 +22,7 @@ val compilerOptions = Seq(
   "-Ywarn-numeric-widen",
   "-Ywarn-unused",
   "-Ywarn-unused-import",
-  "-Ywarn-value-discard"
-)
+  "-Ywarn-value-discard")
 
 val finchVersion = "0.11.0-M4"
 val twitterServerVersion = "1.20.0"
@@ -34,7 +36,7 @@ val monixVersion = "2.0.2"
  */
 
 
-val buildSettings = Seq(
+lazy val buildSettings = Seq(
   javacOptions ++= Seq("-source", "1.8", "-target", "1.8", "-Xlint"),
   scalacOptions ++= compilerOptions,
   scalacOptions in (Compile, console) ~= {
@@ -62,7 +64,7 @@ val buildSettings = Seq(
     //logging
     "ch.qos.logback" % "logback-classic" % "1.1.7"
   ),
-  
+
   doctestTestFramework := DoctestTestFramework.ScalaTest,
   doctestWithDependencies := false
   // Uncomment to enable benchmarking.
@@ -71,6 +73,8 @@ val buildSettings = Seq(
   //wartremoverWarnings in (Compile, compile) ++= Warts.allBut(Wart.Throw)
 )
 
-lazy val service = project.in(file("."))
-  .settings(name := "resturaunt-chooser")
-  .settings(baseSettings ++ buildSettings ++ Defaults.itSettings)
+lazy val root = project
+  .in(file("."))
+  .settings(
+    name := "resturaunt-chooser")
+  .settings(baseSettings ++ buildSettings)
