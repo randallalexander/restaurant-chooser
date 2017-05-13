@@ -6,7 +6,7 @@ import com.typesafe.config.{Config, ConfigFactory}
 import monix.eval.Task
 import net.randallalexander.restaurant.chooser.model.{Restaurant, User}
 
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 
 /*
 Yes, Yes using config as a mini-database is bad, but will work well enough to get me started
@@ -21,21 +21,21 @@ object File {
 
   private val restaurantConfig: util.List[_ <: Config] = dataConfig.getConfigList("restaurants")
 
-  val getUsers: List[User] = usersConfig.toList.map {
+  val getUsers: List[User] = usersConfig.asScala.map {
     config =>
       User(
         name = config.getString("name"),
-        likes = config.getLongList("likes").toList.map(_.toLong),
-        dislikes = config.getLongList("dislikes").toList.map(_.toLong)
+        likes = config.getLongList("likes").asScala.map(_.toLong),
+        dislikes = config.getLongList("dislikes").asScala.map(_.toLong)
       )
-  }
+  }.toList
 
-  val getRestaurants: Map[Long,Restaurant] = restaurantConfig.toList.map {
+  val getRestaurants: Map[Long,Restaurant] = restaurantConfig.asScala.map {
     config =>
       Restaurant(
         id = config.getLong("id"),
         name = config.getString("name"),
-        tags = config.getStringList("tags")
+        tags = config.getStringList("tags").asScala.toList
       )
   }.map { rest => rest.id -> rest }.toMap
 

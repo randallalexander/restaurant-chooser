@@ -3,7 +3,7 @@ import sbt.Resolver
 
 val baseSettings = Seq(
   organization := "net.randallalexander",
-  scalaVersion := "2.11.8"
+  scalaVersion := "2.12.1"
 )
 
 val compilerOptions = Seq(
@@ -24,16 +24,13 @@ val compilerOptions = Seq(
   "-Ywarn-unused-import",
   "-Ywarn-value-discard")
 
-val finchVersion = "0.11.0-M4"
-val twitterServerVersion = "1.20.0"
-val finagleVersion = "6.35.0"
-val circeVersion = "0.5.3"
-val monixVersion = "2.0.2"
-/*
-  Cats version driven by finch.  Careful
-  when upgrading due to binary incompatibilities
-  between Cats 0.5.x and 0.6.x
- */
+val finchVersion = "0.14.0"
+val monixVersion = "2.3.0"
+
+//Taken from Finch build file
+val shapelessVersion = "2.3.2"
+val catsVersion = "0.9.0"
+val circeVersion = "0.7.0"
 
 
 lazy val buildSettings = Seq(
@@ -51,9 +48,8 @@ lazy val buildSettings = Seq(
   libraryDependencies ++= Seq(
     "com.github.finagle" %% "finch-core"     % finchVersion,
     "com.github.finagle" %% "finch-circe"    % finchVersion,
-    "com.twitter"        %% "twitter-server" % twitterServerVersion,
-    "com.twitter"        %% "finagle-stats"  % finagleVersion,//monitoring
 
+    "org.typelevel" %% "cats-core" % catsVersion,
     "io.circe"           %% "circe-generic"  % circeVersion,
 
     //experimental
