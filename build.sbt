@@ -21,7 +21,7 @@ val compilerOptions = Seq(
   "-Ywarn-inaccessible",
   "-Ywarn-numeric-widen",
   "-Ywarn-unused",
-  "-Ywarn-unused-import",
+//  "-Ywarn-unused-import",
   "-Ywarn-value-discard")
 
 val finchVersion = "0.14.0"
@@ -49,12 +49,18 @@ lazy val buildSettings = Seq(
     "com.github.finagle" %% "finch-core"     % finchVersion,
     "com.github.finagle" %% "finch-circe"    % finchVersion,
 
-    "org.typelevel" %% "cats-core" % catsVersion,
+    "org.typelevel"      %% "cats-core" % catsVersion,
     "io.circe"           %% "circe-generic"  % circeVersion,
 
-    //experimental
-    "io.monix" %% "monix" % monixVersion,
-    "io.monix" %% "monix-cats" % monixVersion,
+    "org.tpolecat"       %% "doobie-core-cats" % "0.4.1", // cats   + fs2
+    "org.tpolecat"       %% "doobie-postgres-cats" % "0.4.1",
+    "org.tpolecat"       %% "doobie-hikari-cats" % "0.4.1",
+    "com.zaxxer" % "HikariCP" % "2.6.2",
+
+    "io.monix"           %% "monix" % monixVersion,
+    "io.monix"           %% "monix-cats" % monixVersion,
+
+
     //config
     "com.typesafe" % "config" % "1.3.1",
     //logging
