@@ -1,21 +1,16 @@
 package net.randallalexander.restaurant.chooser.db
-/*
-import cats.free.Free
-import com.twitter.util.Future
-import doobie.free.connection.ConnectionOp
-import fs2.Task
-import net.randallalexander.restaurant.chooser.db
+
+//import cats._
+//import cats.data._
+import cats.effect.IO
+import cats.implicits._
+import doobie._
+import doobie.implicits._
 
 object PostgreSQL {
-  import doobie.imports._
-  import cats._, cats.data._, cats.implicits._
-  import fs2.interop.cats._
 
-  import scala.concurrent.ExecutionContext.Implicits.global
-  import net.randallalexander.restaurant.chooser.utils.FutureConversion._
-
-  def initPersonTable: Future[Int] =
-    transactor.trans(initPersonTableQuery).unsafeRunAsyncFuture().asTwitter
+  def initPersonTable: IO[Int] =
+    initPersonTableQuery.transact(xa)
 
   private def initPersonTableQuery = (dropPerson.run *> createPerson.run)
 
@@ -34,4 +29,3 @@ object PostgreSQL {
     )
   """.update
 }
-*/

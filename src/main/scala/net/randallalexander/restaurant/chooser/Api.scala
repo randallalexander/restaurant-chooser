@@ -5,6 +5,7 @@ import com.twitter.finagle.Service
 import com.twitter.finagle.http.filter.ExceptionFilter
 import com.twitter.finagle.http.{Request, Response}
 import fs2.Stream
+import net.randallalexander.restaurant.chooser.db.PostgreSQL
 //import net.randallalexander.restaurant.chooser.db.PostgreSQL
 //import com.twitter.util.Future
 import io.finch._
@@ -27,8 +28,7 @@ object Api {
 
   def initRestaurant(): Endpoint[Int] =
     get("v1" :: "restaurant" :: "init") {
-      Ok(-1)
-      //PostgreSQL.initPersonTable.map(Ok)
+      PostgreSQL.initPersonTable.map(Ok).unsafeToFuture().asTwitter
     }
 
   def chooseRestaurant(): Endpoint[Restaurant] = get("v1" :: "choose" :: "restaurant" :: params("who") :: params("tags")) { (who: Seq[String], tags: Seq[String]) =>
