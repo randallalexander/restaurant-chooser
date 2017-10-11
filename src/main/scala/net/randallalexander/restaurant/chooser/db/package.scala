@@ -1,9 +1,5 @@
 package net.randallalexander.restaurant.chooser
-
-//import doobie.imports._
-//import cats._
-//import cats.data._
-//import cats.implicits._
+/*
 import java.util.concurrent.TimeUnit
 
 import cats.free.Free
@@ -25,7 +21,7 @@ package object db {
   //"org.tpolecat"       %% "doobie-hikari-cats" % "0.4.1",
 
   val transactor: HikariTransactor[Task] = HikariTransactor[Task](
-    "org.postgresql.Driver", "jdbc:postgresql:resturaunt", "postgres", "<>"
+    "org.postgresql.Driver", "jdbc:postgresql:resturaunt", "postgres", "postgress%FOO"
   ).unsafeRunFor(Duration(5, TimeUnit.SECONDS))
 
   sys.addShutdownHook(transactor.shutdown.unsafeRunFor(Duration(10, TimeUnit.SECONDS)))
@@ -45,3 +41,4 @@ package object db {
   */
 
 }
+*/

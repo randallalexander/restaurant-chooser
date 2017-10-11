@@ -13,7 +13,7 @@ import scala.util.{Failure, Success}
 object FutureConversion {
 
   implicit class RichTFuture[A](val f: TFuture[A]) extends AnyVal {
-    def asScala(implicit e: ExecutionContext): SFuture[A] = {
+    def asScala: SFuture[A] = {
       val p: SPromise[A] = SPromise()
       f.respond {
         case Return(value) =>

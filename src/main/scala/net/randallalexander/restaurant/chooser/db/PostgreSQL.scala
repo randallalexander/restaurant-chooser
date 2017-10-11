@@ -1,5 +1,5 @@
 package net.randallalexander.restaurant.chooser.db
-
+/*
 import cats.free.Free
 import com.twitter.util.Future
 import doobie.free.connection.ConnectionOp
@@ -34,3 +34,4 @@ object PostgreSQL {
     )
   """.update
 }
+*/

@@ -39,7 +39,7 @@ abstract class RequestLoggingFilter[REQ <: Request](val log: Logger, val formatt
   def logException(duration: Duration, request: REQ, throwable: Throwable): Unit = {
     val response = Response (request.version, InternalServerError)
     val line = formatter.format (request, response, duration)
-    log.info (line)
+    log.info (line,throwable)
   }
 }
 

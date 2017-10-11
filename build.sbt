@@ -3,7 +3,7 @@ import sbt.Resolver
 
 val baseSettings = Seq(
   organization := "net.randallalexander",
-  scalaVersion := "2.12.1"
+  scalaVersion := "2.12.3"
 )
 
 val compilerOptions = Seq(
@@ -24,13 +24,14 @@ val compilerOptions = Seq(
 //  "-Ywarn-unused-import",
   "-Ywarn-value-discard")
 
-val finchVersion = "0.14.0"
-val monixVersion = "2.3.0"
+val finchVersion = "0.16.0-M3"
 
 //Taken from Finch build file
 val shapelessVersion = "2.3.2"
-val catsVersion = "0.9.0"
-val circeVersion = "0.7.0"
+val catsVersion = "1.0.0-MF"
+val catsEffectsVersion = "0.4"
+val circeVersion = "0.9.0-M1"
+val doobieVersion = "0.5.0-M8"
 
 
 lazy val buildSettings = Seq(
@@ -50,21 +51,22 @@ lazy val buildSettings = Seq(
     "com.github.finagle" %% "finch-circe"    % finchVersion,
 
     "org.typelevel"      %% "cats-core" % catsVersion,
+    "org.typelevel"      %% "cats-effect" % catsEffectsVersion,
     "io.circe"           %% "circe-generic"  % circeVersion,
 
-    "org.tpolecat"       %% "doobie-core-cats" % "0.4.1", // cats   + fs2
-    "org.tpolecat"       %% "doobie-postgres-cats" % "0.4.1",
-    "org.tpolecat"       %% "doobie-hikari-cats" % "0.4.1",
-    "com.zaxxer" % "HikariCP" % "2.6.2",
+    //fs2
+    "co.fs2" %% "fs2-core" % "0.10.0-M6",
 
-    "io.monix"           %% "monix" % monixVersion,
-    "io.monix"           %% "monix-cats" % monixVersion,
+    "org.tpolecat"       %% "doobie-core"      % doobieVersion,
+    "org.tpolecat" %% "doobie-hikari"    % doobieVersion,
+    "org.tpolecat" %% "doobie-postgres"  % doobieVersion,
+    "com.zaxxer" % "HikariCP" % "2.7.2",//correct version??
 
 
     //config
-    "com.typesafe" % "config" % "1.3.1",
+    "com.typesafe" % "config" % "1.3.2",
     //logging
-    "ch.qos.logback" % "logback-classic" % "1.1.7"
+    "io.verizon.journal" %% "core" % "3.0.+"
   ),
 
   doctestTestFramework := DoctestTestFramework.ScalaTest,
