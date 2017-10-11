@@ -28,6 +28,9 @@ object Api {
 
   def initRestaurant(): Endpoint[Int] =
     get("v1" :: "restaurant" :: "init") {
+      /*
+      Convert to stream?
+       */
       PostgreSQL.initPersonTable.map(Ok).unsafeToFuture().asTwitter
     }
 
