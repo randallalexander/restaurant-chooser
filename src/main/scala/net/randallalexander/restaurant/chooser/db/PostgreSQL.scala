@@ -94,6 +94,7 @@ object PostgreSQL {
       zip NUMERIC(5, 0) NOT NULL,
       ethnic_type ethnicType,
       food_type foodType,
+      price_per_person NUMERIC (5,2),
       cord_lat NUMERIC(11, 8),
       cord_long NUMERIC(11, 8)
     )
