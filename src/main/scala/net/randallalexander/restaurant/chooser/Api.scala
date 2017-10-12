@@ -31,7 +31,7 @@ object Api {
       /*
       Convert to stream?
        */
-      PostgreSQL.initPersonTable.map(Ok).unsafeToFuture().asTwitter
+      PostgreSQL.initDatabase.map(Ok).unsafeToFuture().asTwitter
     }
 
   def chooseRestaurant(): Endpoint[Restaurant] = get("v1" :: "choose" :: "restaurant" :: params("who") :: params("tags")) { (who: Seq[String], tags: Seq[String]) =>

@@ -9,10 +9,52 @@ import doobie.implicits._
 
 object PostgreSQL {
 
-  def initPersonTable: IO[Int] =
-    initPersonTableQuery.transact(xa)
+  def initDatabase: IO[Int] =
+    initDatabaseQuery.transact(xa)
 
-  private def initPersonTableQuery = (dropPerson.run *> dropRestaurant.run *> createPerson.run *> createRestaurant.run)
+  private def initDatabaseQuery = (
+    dropLikes.run *>
+    dropDislikes.run *>
+
+    dropPerson.run *>
+    dropRestaurant.run *>
+
+    dropEthnicType.run *>
+    dropFoodType.run *>
+
+    createEthnicType.run *>
+    createFoodType.run *>
+
+    createPerson.run *>
+    createRestaurant.run *>
+
+    createLikes.run *>
+    createDislikes.run
+    )
+
+////types
+
+  private val dropEthnicType:Update0 =
+    sql"""
+    DROP TYPE IF EXISTS ethnicType
+  """.update
+
+  private val createEthnicType:Update0 =
+    sql"""
+    CREATE TYPE ethnicType AS ENUM ('mexican', 'american', 'italian', 'chinese');
+  """.update
+
+  private val dropFoodType:Update0 =
+    sql"""
+    DROP TYPE IF EXISTS foodType
+  """.update
+
+  private val createFoodType:Update0 =
+    sql"""
+    CREATE TYPE foodType AS ENUM ('sandwich', 'burrito');
+  """.update
+
+///regular tables
 
   private val dropPerson:Update0 =
     sql"""
@@ -22,7 +64,7 @@ object PostgreSQL {
   private val createPerson:Update0 =
     sql"""
     CREATE TABLE person (
-      id SERIAL,
+      id SERIAL PRIMARY KEY,
       nickname varchar NOT NULL unique,
       fname varchar NOT NULL,
       lname varchar NOT NULL
@@ -44,14 +86,47 @@ object PostgreSQL {
   private val createRestaurant:Update0 =
     sql"""
     CREATE TABLE restaurant (
-      id SERIAL,
+      id SERIAL PRIMARY KEY,
       name varchar NOT NULL,
       addressLine1 varchar NOT NULL,
       city varchar NOT NULL,
       state varchar(2) NOT NULL,
       zip NUMERIC(5, 0) NOT NULL,
-      cord_lat NUMERIC(11, 8) NOT NULL,
-      cord_long NUMERIC(11, 8) NOT NULL
+      ethnic_type ethnicType,
+      food_type foodType,
+      cord_lat NUMERIC(11, 8),
+      cord_long NUMERIC(11, 8)
     )
   """.update
+
+////join tables
+
+  private val dropLikes:Update0 =
+    sql"""
+    DROP TABLE IF EXISTS likes
+  """.update
+
+  private val createLikes:Update0 =
+    sql"""
+    CREATE TABLE likes (
+      person_id INTEGER NOT NULL REFERENCES person(id),
+      restaurant_id INTEGER NOT NULL REFERENCES restaurant(id),
+      PRIMARY KEY(person_id, restaurant_id)
+    )
+  """.update
+
+  private val dropDislikes:Update0 =
+    sql"""
+    DROP TABLE IF EXISTS dislikes
+  """.update
+
+  private val createDislikes:Update0 =
+    sql"""
+    CREATE TABLE dislikes (
+      person_id INTEGER NOT NULL REFERENCES person(id),
+      restaurant_id INTEGER NOT NULL REFERENCES restaurant(id),
+      PRIMARY KEY(person_id, restaurant_id)
+    )
+  """.update
+
 }
