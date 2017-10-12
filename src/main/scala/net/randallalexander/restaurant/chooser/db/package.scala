@@ -14,7 +14,7 @@ package object db {
   private val config: Config = IO.pure(ConfigFactory.load()).map(_.getConfig("database")).unsafeRunSync()
 
   val xa: HikariTransactor[IO] = HikariTransactor[IO](
-    "org.postgresql.Driver", "jdbc:postgresql:resturaunt", "postgres", config.getString("password")
+    "org.postgresql.Driver", "jdbc:postgresql:restaurant", "postgres", config.getString("password")
   ).unsafeRunSync()
 
 }
