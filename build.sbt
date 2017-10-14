@@ -32,6 +32,7 @@ val catsVersion = "1.0.0-MF"
 val catsEffectsVersion = "0.4"
 val circeVersion = "0.9.0-M1"
 val doobieVersion = "0.5.0-M8"
+val fs2Version = "0.10.0-M7"
 
 
 lazy val buildSettings = Seq(
@@ -55,9 +56,9 @@ lazy val buildSettings = Seq(
     "io.circe"           %% "circe-generic"  % circeVersion,
 
     //fs2
-    "co.fs2" %% "fs2-core" % "0.10.0-M6",
+    "co.fs2" %% "fs2-core" % fs2Version,
 
-    "org.tpolecat"       %% "doobie-core"      % doobieVersion,
+    "org.tpolecat" %% "doobie-core"      % doobieVersion,
     "org.tpolecat" %% "doobie-hikari"    % doobieVersion,
     "org.tpolecat" %% "doobie-postgres"  % doobieVersion,
     "com.zaxxer" % "HikariCP" % "2.7.2",//correct version??
@@ -80,5 +81,5 @@ lazy val buildSettings = Seq(
 lazy val root = project
   .in(file("."))
   .settings(
-    name := "resturaunt-chooser")
+    name := "restaurant-chooser")
   .settings(baseSettings ++ buildSettings)
