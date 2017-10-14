@@ -1,9 +1,9 @@
 package net.randallalexander.restaurant.chooser.db
-
+/*
 import cats.effect.IO
 import java.util
 import com.typesafe.config.{Config, ConfigFactory}
-import net.randallalexander.restaurant.chooser.model.{Restaurant, User}
+import net.randallalexander.restaurant.chooser.model.{Restaurant, Person}
 import scala.collection.JavaConverters._
 
 /*
@@ -19,11 +19,11 @@ object File {
 
   private val restaurantConfig: IO[util.List[_ <: Config]] = dataConfig.map(_.getConfigList("restaurants"))
 
-  val getUsers: IO[List[User]] = usersConfig
+  val getUsers: IO[List[Person]] = usersConfig
     .map{
       _.asScala.map{
         conf =>
-          User(
+          Person(
             name = conf.getString("name"),
             likes = conf.getLongList("likes").asScala.map(_.toLong),
             dislikes = conf.getLongList("dislikes").asScala.map(_.toLong)
@@ -96,3 +96,4 @@ object File {
       }
   }
 }
+*/

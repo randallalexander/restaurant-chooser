@@ -1,16 +1,16 @@
 package net.randallalexander.restaurant.chooser
 
-import cats.effect.IO
+//import cats.effect.IO
 import com.twitter.finagle.Service
 import com.twitter.finagle.http.filter.ExceptionFilter
 import com.twitter.finagle.http.{Request, Response}
-import fs2.Stream
-import net.randallalexander.restaurant.chooser.db.PostgreSQL
-//import net.randallalexander.restaurant.chooser.db.PostgreSQL
 //import com.twitter.util.Future
+import net.randallalexander.restaurant.chooser.db.RestaurantDAO
+//import fs2.Stream
+import net.randallalexander.restaurant.chooser.db.PostgreSQL
+
 import io.finch._
 import io.finch.circe._
-import net.randallalexander.restaurant.chooser.db.File
 import net.randallalexander.restaurant.chooser.errors.ErrorHandler
 import net.randallalexander.restaurant.chooser.filter.RequestLoggingFilter
 import net.randallalexander.restaurant.chooser.utils.FutureConversion._
@@ -27,45 +27,57 @@ object Api {
 
 
   def initRestaurant(): Endpoint[Int] =
-    get("v1" :: "restaurant" :: "init") {
+    get("init") {
       /*
       Convert to stream?
        */
       PostgreSQL.initDatabase.map(Ok).unsafeToFuture().asTwitter
     }
 
-  def chooseRestaurant(): Endpoint[Restaurant] = get("v1" :: "choose" :: "restaurant" :: params("who") :: params("tags")) { (who: Seq[String], tags: Seq[String]) =>
+  /*
+  def chooseRestaurant(): Endpoint[Restaurant] = get("v1" :: "choose" :: "restaurant" :: params("who")) { (who: Seq[String]) =>
+  }
+*/
+  def restaurantPreProcess: Endpoint[Restaurant] = jsonBody[Restaurant].map(_.copy(id = None))
+
+  def createRestaurant(): Endpoint[Restaurant] = post(restaurantPreProcess) { restaurant: Restaurant =>
+    RestaurantDAO.createRestaurant(restaurant).map(Ok).unsafeToFuture().asTwitter.onFailure {
+      case th => th.printStackTrace()
+    }
+  }
+
+  def getRestaurant(): Endpoint[Restaurant] = get(path[Int]) { restaurantId:Int =>
     /*
-    Probably could get away with just running the IO but
-    part of the idea in to get familiar with Stream and
-    hopefully something will pop so we can leverage it more
-     */
-    Stream
-      .eval(chooseLikedRestaurant(who, tags))
-      .runLast
-      .map(_.flatten)
-      .map{
-        case Some(restaurant) => Ok(restaurant)
-        case None => NotFound(new RuntimeException("Users have no restaurants in common."))
-      }.unsafeToFuture().asTwitter
+    val geo:Geo =  Geo(1.0d,1.0d)
+    val address:Address = Address("addrLn1","cty","st",1,Some(geo))
+    val restaurant:Restaurant = Restaurant(None,"nam",address,Some(mexican),Some(burrito),Some(1.1d))
+    */
+    RestaurantDAO.getRestaurant(restaurantId).map{
+        case Some(result) => Ok(result)
+        case None => NotFound(new RuntimeException(s"Restaurant $restaurantId is not found"))
+    }.unsafeToFuture().asTwitter
   }
 
   /*
   Move me
    */
-  def chooseLikedRestaurant(who: Seq[String], tags: Seq[String]): IO[Option[Restaurant]] = {
-    File.getLikedRestaurant(who, tags).map {
-      likedRestaurants =>
-        likedRestaurants.toList match {
-          case Nil => None
-          case liked =>
-            val randomValue = Random.nextInt(liked.size)
-            Some(liked(randomValue))
-        }
+  def chooseRandomElement[T](items: Seq[T]): Option[T] = {
+    items.size match {
+      case 0 => None
+      case 1 => Some(items(1))
+      case _ =>
+        val randomValue = Random.nextInt(items.size)
+        Some(items(randomValue))
     }
   }
 
-  private def api = echo() :+: chooseRestaurant() :+: initRestaurant()
+  val v1RestaurantRoutes =
+    "v1" :: "restaurant" :: (
+      initRestaurant() :+: createRestaurant() :+: getRestaurant()
+
+      )
+
+  private def api = echo() :+: v1RestaurantRoutes
 
   /*
   TODO: Look into effective use of MethodRequiredFilter
