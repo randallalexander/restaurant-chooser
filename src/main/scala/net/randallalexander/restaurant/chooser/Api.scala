@@ -64,7 +64,7 @@ object Api {
   def chooseRandomElement[T](items: Seq[T]): Option[T] = {
     items.size match {
       case 0 => None
-      case 1 => Some(items(1))
+      case 1 => Some(items(0))
       case _ =>
         val randomValue = Random.nextInt(items.size)
         Some(items(randomValue))
