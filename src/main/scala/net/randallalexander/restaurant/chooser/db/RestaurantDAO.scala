@@ -4,6 +4,7 @@ import cats.effect.IO
 import cats.implicits._
 import doobie._
 import doobie.implicits._
+import fs2.Stream
 import net.randallalexander.restaurant.chooser.model._
 import shapeless.record._
 
@@ -35,39 +36,77 @@ object RestaurantDAO {
   }
 
   def getRestaurant(id:Int): IO[Option[Restaurant]] = {
-    getRestaurantQuery(id).transact(xa).map { _.map {
-      record =>
-        val geo = (record('lat), record('long)) match {
-          case (Some(lat), Some(long)) => Some(Geo(lat, long))
-          case _ => None
-        }
-        val addr = Address(
-          addressLine1 = record('addressLine1),
-          city = record('city),
-          state = record('state),
-          zip = record('zip),
-          geo = geo
+    getRestaurantQuery(id).transact(xa).map { _.map(mapRecordToResponse)}
+  }
 
-        )
-        Restaurant(
-          id = record('id),
-          name = record('name),
-          address = addr,
-          ethnicity = record('ethnicType).flatMap(EthnicityOps.toEnum),
-          kindOfFood = record('foodType).flatMap(KindOfFoodOps.toEnum),
-          pricePerPerson = record('pricePerPerson)
-        )
-      }
+  private def mapRecordToResponse(record:restaurantRec):Restaurant = {
+    val geo = (record('lat), record('long)) match {
+      case (Some(lat), Some(long)) => Some(Geo(lat, long))
+      case _ => None
     }
+    val addr = Address(
+      addressLine1 = record('addressLine1),
+      city = record('city),
+      state = record('state),
+      zip = record('zip),
+      geo = geo
+
+    )
+    Restaurant(
+      id = record('id),
+      name = record('name),
+      address = addr,
+      ethnicity = record('ethnicType).flatMap(EthnicityOps.toEnum),
+      kindOfFood = record('foodType).flatMap(KindOfFoodOps.toEnum),
+      pricePerPerson = record('pricePerPerson)
+    )
   }
 
   //should be able to use LabelledGeneric[Restaurant] instead but can't get the type info
   type restaurantRec = Record.`'id -> Option[Int], 'name -> String, 'addressLine1 -> String, 'city -> String, 'state -> String, 'zip -> Int, 'lat -> Option[Double], 'long -> Option[Double], 'ethnicType -> Option[String], 'foodType -> Option[String], 'pricePerPerson -> Option[Double]`.T
-  private def getRestaurantQuery(restId:Int):ConnectionIO[Option[restaurantRec]] = {
-    sql"""
-         select id, name, addressLine1, city, state, zip, cord_lat, cord_long, ethnic_type, food_type, price_per_person from restaurant where id = $restId
-       """.query[restaurantRec].option
+  val selectAll = fr"""select id, name, addressLine1, city, state, zip, cord_lat, cord_long, ethnic_type, food_type, price_per_person"""
+  val fromRestaurant = fr"""from restaurant"""
+  private def streamToList (stream:Stream[ConnectionIO,restaurantRec]):IO[List[Restaurant]] = {
+    stream
+      .map(mapRecordToResponse)
+      .list
+      .transact(xa)
   }
+
+  //TODO:Extract - where clause only diff in get
+
+  private def getRestaurantQuery(restId:Int):ConnectionIO[Option[restaurantRec]] = {
+    (selectAll ++ fromRestaurant ++
+      fr"""
+         where id = $restId
+       """).query[restaurantRec].option
+  }
+
+
+  def listRestaurants(offset:Int, limit:Int): IO[List[Restaurant]] = {
+    streamToList(listRestaurant(offset,limit))
+  }
+
+  private def listRestaurant(offset:Int, limit:Int):Stream[ConnectionIO,restaurantRec] = {
+    (selectAll ++ fromRestaurant ++
+      fr"""
+        limit $limit offset $offset
+       """).query[restaurantRec].process
+  }
+
+
+  def getRestaurantByName(name:String): IO[List[Restaurant]] = {
+    streamToList(getRestaurantByNameQuery(name))
+  }
+
+  private def getRestaurantByNameQuery(name:String):Stream[ConnectionIO,restaurantRec] = {
+    val predicateValue = s"%$name%"
+    (selectAll ++ fromRestaurant ++
+      fr"""
+         where name ILIKE $predicateValue
+       """).query[restaurantRec].process
+  }
+
 
   def deleteRestaurant(id:Int): IO[Int] = {
     deleteRestaurantQuery(id).transact(xa)

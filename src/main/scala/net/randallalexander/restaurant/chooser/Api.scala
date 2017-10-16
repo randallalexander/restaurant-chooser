@@ -6,6 +6,7 @@ import com.twitter.finagle.http.filter.ExceptionFilter
 import com.twitter.finagle.http.{Request, Response}
 import net.randallalexander.restaurant.chooser.db.PersonDAO
 import net.randallalexander.restaurant.chooser.model.Person
+import scala.util.Try
 //import com.twitter.util.Future
 import net.randallalexander.restaurant.chooser.db.RestaurantDAO
 //import fs2.Stream
@@ -60,6 +61,17 @@ object Api {
     }.unsafeToFuture().asTwitter
   }
 
+  def listRestaurant(): Endpoint[List[Restaurant]] = get(paramOption("offset") :: paramOption("limit")) { (offsetOpt: Option[String], limitOpt: Option[String]) =>
+    val offset = offsetOpt.flatMap(in => Try(in.toInt).toOption).fold(0)(identity)
+    val limit = limitOpt.flatMap(in => Try(in.toInt).toOption).fold(5)(identity)
+    RestaurantDAO.listRestaurants(offset,limit).map(Ok).unsafeToFuture().asTwitter
+  }
+
+  //partial match on name...like a contains
+  def searchRestaurant(): Endpoint[List[Restaurant]] = get("name" :: path[String]) { name: String =>
+    RestaurantDAO.getRestaurantByName(name).map(Ok).unsafeToFuture().asTwitter
+  }
+
   def personPreProcess: Endpoint[Person] = jsonBody[Person].map(_.copy(id = None))
 
   def createPerson(): Endpoint[Person] = post(personPreProcess) { person: Person =>
@@ -103,7 +115,7 @@ object Api {
 
   val v1RestaurantRoutes =
     "v1" :: "restaurant" :: (
-        createRestaurant() :+: getRestaurant() :+: deleteRestaurant()
+        createRestaurant() :+: getRestaurant() :+: listRestaurant() :+: searchRestaurant() :+: deleteRestaurant()
       )
 
   val v1PersonRoutes =
