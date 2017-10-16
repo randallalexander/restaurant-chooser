@@ -30,10 +30,7 @@ object Api {
 
 
   def initDatabase(): Endpoint[Int] =
-    get("init") {
-      /*
-      Convert to stream?
-       */
+    get("db") {
       PostgreSQL.initDatabase.map(Ok).unsafeToFuture().asTwitter
     }
 
@@ -143,7 +140,7 @@ object Api {
   TODO: Split up the API according to responsibility
    */
 
-  private def allEndpoints = echo() :+: v1RestaurantRoutes :+: v1PersonRoutes
+  private def allEndpoints = echo :+: v1InitRoutes :+: v1RestaurantRoutes :+: v1PersonRoutes
 
   /*
   TODO: Look into effective use of MethodRequiredFilter

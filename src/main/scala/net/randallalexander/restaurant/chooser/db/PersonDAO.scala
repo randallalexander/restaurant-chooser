@@ -6,28 +6,28 @@ import doobie._
 import doobie.implicits._
 import doobie.postgres.sqlstate.class23.UNIQUE_VIOLATION
 import fs2.Stream
+import java.util.UUID
 import net.randallalexander.restaurant.chooser.errors.Errors.ConstraintViolation
 import net.randallalexander.restaurant.chooser.model._
 import shapeless.record._
 
 object PersonDAO {
   def createPerson(person: Person): IO[Either[ConstraintViolation,Person]] = {
-    createPersonQuery(person).transact(xa).map {
-      _.map { newId =>
-        person.copy(id = Some(newId))
-      }
-    }
+    val id = UUID.randomUUID().toString
+    val personWithId = person.copy(id=Some(id))
+    createPersonQuery(personWithId).run.attemptSomeSqlState {
+      case UNIQUE_VIOLATION => ConstraintViolation("Duplicate nickname")
+    }.transact(xa).map(_.map( _ => personWithId))
   }
 
-  private def createPersonQuery(person: Person): ConnectionIO[Either[ConstraintViolation, Int]] = {
+  private def createPersonQuery(person: Person): Update0 = {
     sql"""
-      insert into person (fname, lname, nickname)
+      insert into person (id, fname, lname, nickname)
         values (
+          ${person.id},
           ${person.fname.trim},
           ${person.lname.trim},
-          ${person.nickname.trim})""".update.withUniqueGeneratedKeys[Int]("id").attemptSomeSqlState {
-        case UNIQUE_VIOLATION => ConstraintViolation("Duplicate nickname")
-      }
+          ${person.nickname.trim})""".update
   }
 
   val selectAll = fr"""select id, nickname, fname, lname"""
@@ -101,10 +101,10 @@ object PersonDDL {
   private val createPerson:Update0 =
     sql"""
     CREATE TABLE person (
-      id SERIAL PRIMARY KEY,
-      nickname varchar NOT NULL unique,
-      fname varchar NOT NULL,
-      lname varchar NOT NULL
+      id VARCHAR PRIMARY KEY,
+      nickname VARCHAR NOT NULL unique,
+      fname VARCHAR NOT NULL,
+      lname VARCHAR NOT NULL
     )
   """.update
 }

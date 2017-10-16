@@ -3,7 +3,7 @@ package net.randallalexander.restaurant.chooser.model
 import io.circe.{Decoder, Encoder}
 import io.circe.generic.semiauto._
 
-case class Person(id:Option[Int], nickname:String, fname:String, lname:String)
+case class Person(id:Option[String], nickname:String, fname:String, lname:String)
 
 object Person {
   implicit val userDecoder: Decoder[Person] = deriveDecoder[Person]

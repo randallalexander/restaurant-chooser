@@ -5,34 +5,36 @@ import cats.implicits._
 import doobie._
 import doobie.implicits._
 import fs2.Stream
+import java.util.UUID
 import net.randallalexander.restaurant.chooser.model._
 import shapeless.record._
 
 object RestaurantDAO {
 
   def createRestaurant(restaurant: Restaurant): IO[Restaurant] = {
-    createRestaurantQuery(restaurant).transact(xa).map { newId =>
-      restaurant.copy(id = Some(newId))
-    }
+    val id = UUID.randomUUID().toString
+    val restaurantWithId = restaurant.copy(id=Some(id))
+    createRestaurantQuery(restaurantWithId).run.transact(xa).map(_ => restaurantWithId)
   }
 
-  private def createRestaurantQuery(restaurant: Restaurant): ConnectionIO[Int] = {
+  private def createRestaurantQuery(restaurant: Restaurant): Update0 = {
     val address = restaurant.address
     val geo = address.geo
     sql"""
           insert into restaurant (
-          name, addressLine1, city, state, zip, ethnic_type, food_type, price_per_person,cord_lat,cord_long)
+          id, name, addressLine1, city, state, zip, ethnic_type, food_type, price_per_person,cord_lat,cord_long)
            values (
-            ${restaurant.name},
-            ${address.addressLine1},
-            ${address.city},
-            ${address.state},
+            ${restaurant.id},
+            ${restaurant.name.trim},
+            ${address.addressLine1.trim},
+            ${address.city.trim},
+            ${address.state.trim},
             ${address.zip},
-            ${restaurant.ethnicity.map(_.name)},
-            ${restaurant.kindOfFood.map(_.name)},
+            ${restaurant.ethnicity.map(_.name.trim)},
+            ${restaurant.kindOfFood.map(_.name.trim)},
             ${restaurant.pricePerPerson},
             ${geo.map(_.lat)},
-            ${geo.map(_.lat)})""".update.withUniqueGeneratedKeys[Int]("id")
+            ${geo.map(_.lat)})""".update
   }
 
   private def mapRecordToResponse(record:restaurantRec):Restaurant = {
@@ -59,7 +61,7 @@ object RestaurantDAO {
   }
 
   //should be able to use LabelledGeneric[Restaurant] instead but can't get the type info
-  type restaurantRec = Record.`'id -> Option[Int], 'name -> String, 'addressLine1 -> String, 'city -> String, 'state -> String, 'zip -> Int, 'lat -> Option[Double], 'long -> Option[Double], 'ethnicType -> Option[String], 'foodType -> Option[String], 'pricePerPerson -> Option[Double]`.T
+  type restaurantRec = Record.`'id -> Option[String], 'name -> String, 'addressLine1 -> String, 'city -> String, 'state -> String, 'zip -> Int, 'lat -> Option[Double], 'long -> Option[Double], 'ethnicType -> Option[String], 'foodType -> Option[String], 'pricePerPerson -> Option[Double]`.T
   val selectAll = fr"""select id, name, addressLine1, city, state, zip, cord_lat, cord_long, ethnic_type, food_type, price_per_person"""
   val fromRestaurant = fr"""from restaurant"""
   private def streamToList (stream:Stream[ConnectionIO,restaurantRec]):IO[List[Restaurant]] = {
@@ -140,11 +142,11 @@ object RestaurantDDL {
   private val createRestaurant:Update0 =
     sql"""
     CREATE TABLE restaurant (
-      id SERIAL PRIMARY KEY,
-      name varchar NOT NULL,
-      addressLine1 varchar NOT NULL,
-      city varchar NOT NULL,
-      state varchar(2) NOT NULL,
+      id VARCHAR PRIMARY KEY,
+      name VARCHAR NOT NULL,
+      addressLine1 VARCHAR NOT NULL,
+      city VARCHAR NOT NULL,
+      state VARCHAR(2) NOT NULL,
       zip NUMERIC(5, 0) NOT NULL,
       ethnic_type VARCHAR,
       food_type VARCHAR,

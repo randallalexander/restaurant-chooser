@@ -27,8 +27,8 @@ object PostgreSQL {
   private val createLikes:Update0 =
     sql"""
     CREATE TABLE likes (
-      person_id INTEGER NOT NULL REFERENCES person(id),
-      restaurant_id INTEGER NOT NULL REFERENCES restaurant(id),
+      person_id VARCHAR NOT NULL REFERENCES person(id),
+      restaurant_id VARCHAR NOT NULL REFERENCES restaurant(id),
       PRIMARY KEY(person_id, restaurant_id)
     )
   """.update
@@ -41,8 +41,8 @@ object PostgreSQL {
   private val createDislikes:Update0 =
     sql"""
     CREATE TABLE dislikes (
-      person_id INTEGER NOT NULL REFERENCES person(id),
-      restaurant_id INTEGER NOT NULL REFERENCES restaurant(id),
+      person_id VARCHAR NOT NULL REFERENCES person(id),
+      restaurant_id VARCHAR NOT NULL REFERENCES restaurant(id),
       PRIMARY KEY(person_id, restaurant_id)
     )
   """.update

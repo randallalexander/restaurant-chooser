@@ -13,7 +13,7 @@ import net.randallalexander.restaurant.chooser.model.KindOfFood._
 
  */
 
-case class Restaurant (id:Option[Int], name:String, address: Address, ethnicity: Option[Ethnicity], kindOfFood:Option[KindOfFood], pricePerPerson:Option[Double])
+case class Restaurant (id:Option[String], name:String, address: Address, ethnicity: Option[Ethnicity], kindOfFood:Option[KindOfFood], pricePerPerson:Option[Double])
 
 object Restaurant {
   implicit val restaurantDecoder: Decoder[Restaurant] = deriveDecoder[Restaurant]
