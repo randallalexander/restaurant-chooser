@@ -68,6 +68,17 @@ object RestaurantDAO {
          select id, name, addressLine1, city, state, zip, cord_lat, cord_long, ethnic_type, food_type, price_per_person from restaurant where id = $restId
        """.query[restaurantRec].option
   }
+
+  def deleteRestaurant(id:Int): IO[Int] = {
+    deleteRestaurantQuery(id).transact(xa)
+  }
+
+  private def deleteRestaurantQuery(restaurantId:Int): ConnectionIO[Int] = {
+    sql"""
+      DELETE FROM restaurant
+      WHERE id = $restaurantId
+       """.update.run
+  }
 }
 
 object RestaurantDDL {

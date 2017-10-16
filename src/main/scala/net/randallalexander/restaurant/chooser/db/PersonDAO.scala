@@ -18,7 +18,6 @@ object PersonDAO {
     }
   }
 
-  //TODO:need to check for duplicate nickname before creating
   private def createPersonQuery(person: Person): ConnectionIO[Either[ConstraintViolation, Int]] = {
     sql"""
       insert into person (fname, lname, nickname)

@@ -53,6 +53,13 @@ object Api {
     }.unsafeToFuture().asTwitter
   }
 
+  def deleteRestaurant(): Endpoint[Unit] = delete(path[Int]) { restaurantId:Int =>
+    RestaurantDAO.deleteRestaurant(restaurantId).map{
+      case 0 => NotFound(new RuntimeException(s"Person $restaurantId is not found"))
+      case _ => NoContent[Unit]
+    }.unsafeToFuture().asTwitter
+  }
+
   def personPreProcess: Endpoint[Person] = jsonBody[Person].map(_.copy(id = None))
 
   def createPerson(): Endpoint[Person] = post(personPreProcess) { person: Person =>
@@ -96,7 +103,7 @@ object Api {
 
   val v1RestaurantRoutes =
     "v1" :: "restaurant" :: (
-        createRestaurant() :+: getRestaurant()
+        createRestaurant() :+: getRestaurant() :+: deleteRestaurant()
       )
 
   val v1PersonRoutes =
