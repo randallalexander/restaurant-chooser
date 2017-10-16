@@ -29,10 +29,9 @@ val finchVersion = "0.16.0-M3"
 //Taken from Finch build file
 val shapelessVersion = "2.3.2"
 val catsVersion = "1.0.0-MF"
-val catsEffectsVersion = "0.4"
 val circeVersion = "0.9.0-M1"
 val doobieVersion = "0.5.0-M8"
-val fs2Version = "0.10.0-M7"
+val fs2Version = "0.10.0-M6"
 
 
 lazy val buildSettings = Seq(
@@ -52,7 +51,6 @@ lazy val buildSettings = Seq(
     "com.github.finagle" %% "finch-circe"    % finchVersion,
 
     "org.typelevel"      %% "cats-core" % catsVersion,
-    "org.typelevel"      %% "cats-effect" % catsEffectsVersion,
     "io.circe"           %% "circe-generic"  % circeVersion,
 
     //fs2
