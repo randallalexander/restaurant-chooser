@@ -10,7 +10,7 @@ object Person {
   implicit val userEncoder: Encoder[Person] = deriveEncoder[Person]
 }
 
-case class Preference (person:Int, restaurant:Int)
+case class Preference (person:String, restaurant:String)
 object Preference {
   implicit val userDecoder: Decoder[Preference] = deriveDecoder[Preference]
   implicit val userEncoder: Encoder[Preference] = deriveEncoder[Preference]

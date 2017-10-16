@@ -4,8 +4,8 @@ package net.randallalexander.restaurant.chooser
 import com.twitter.finagle.Service
 import com.twitter.finagle.http.filter.ExceptionFilter
 import com.twitter.finagle.http.{Request, Response}
-import net.randallalexander.restaurant.chooser.db.PersonDAO
-import net.randallalexander.restaurant.chooser.model.Person
+import net.randallalexander.restaurant.chooser.db.{PersonDAO, PreferenceDAO}
+import net.randallalexander.restaurant.chooser.model.{Person, Preference}
 import scala.util.Try
 //import com.twitter.util.Future
 import net.randallalexander.restaurant.chooser.db.RestaurantDAO
@@ -38,6 +38,7 @@ object Api {
   def chooseRestaurant(): Endpoint[Restaurant] = get("v1" :: "choose" :: "restaurant" :: params("who")) { (who: Seq[String]) =>
   }
 */
+////restaurantAPI
   def restaurantPreProcess: Endpoint[Restaurant] = jsonBody[Restaurant].map(_.copy(id = None))
 
   def createRestaurant(): Endpoint[Restaurant] = post(restaurantPreProcess) { restaurant: Restaurant =>
@@ -68,7 +69,7 @@ object Api {
       case _ => NoContent[Unit]
     }.unsafeToFuture().asTwitter
   }
-
+///person API
   def personPreProcess: Endpoint[Person] = jsonBody[Person].map(_.copy(id = None))
 
   def createPerson(): Endpoint[Person] = post(personPreProcess) { person: Person =>
@@ -107,6 +108,63 @@ object Api {
       case _ => NoContent[Unit]
     }.unsafeToFuture().asTwitter
   }
+////preference api
+  //TODO:If we have a like something we need to make sure to remove any dislike and vica versa
+  def createLike(): Endpoint[Preference] = post("like" :: jsonBody[Preference]) { preference: Preference =>
+    PreferenceDAO.createLike(preference).map{
+      _.fold(
+        constraintViolation => BadRequest(new RuntimeException(constraintViolation.message)),
+        preference => Ok(preference)
+      )
+    }.unsafeToFuture().asTwitter
+  }
+
+  def deleteLike(): Endpoint[Unit] = delete("like" :: path[String] :: path[String]) { (personId:String, restaurantId:String) =>
+    PreferenceDAO.deleteLike(personId, restaurantId).map{
+      case 0 => NotFound(new RuntimeException(s"Like $personId / $restaurantId is not found"))
+      case _ => NoContent[Unit]
+    }.unsafeToFuture().asTwitter
+  }
+
+  def getLikes(): Endpoint[List[Preference]] = get("like" :: "person" :: path[String]) { personId: String =>
+    PreferenceDAO.getLikesByPerson(personId).map(Ok).unsafeToFuture().asTwitter
+  }
+
+  def getLike(): Endpoint[Preference] = get("like" :: path[String] :: path[String]) { (personId: String, restaurantId: String)=>
+    PreferenceDAO.getLike(personId,restaurantId).map{
+      case Some(preference) => Ok(preference)
+      case None =>
+        NotFound(new RuntimeException(s"Like $personId / $restaurantId is not found"))
+    }.unsafeToFuture().asTwitter
+  }
+
+  def createDislike(): Endpoint[Preference] = post("dislike" :: jsonBody[Preference]) { preference: Preference =>
+    PreferenceDAO.createDislike(preference).map{
+      _.fold(
+        constraintViolation => BadRequest(new RuntimeException(constraintViolation.message)),
+        preference => Ok(preference)
+      )
+    }.unsafeToFuture().asTwitter
+  }
+
+  def deleteDislike(): Endpoint[Unit] = delete("dislike" :: path[String] :: path[String]) { (personId:String, restaurantId:String) =>
+    PreferenceDAO.deleteDislike(personId, restaurantId).map{
+      case 0 => NotFound(new RuntimeException(s"Dislike $personId / $restaurantId is not found"))
+      case _ => NoContent[Unit]
+    }.unsafeToFuture().asTwitter
+  }
+
+  def getDislikes(): Endpoint[List[Preference]] = get("dislike" :: "person" :: path[String]) { personId: String =>
+    PreferenceDAO.getDislikesByPerson(personId).map(Ok).unsafeToFuture().asTwitter
+  }
+
+  def getDislike(): Endpoint[Preference] = get("dislike" :: path[String] :: path[String]) { (personId: String, restaurantId: String)=>
+    PreferenceDAO.getDislike(personId,restaurantId).map{
+      case Some(preference) => Ok(preference)
+      case None =>
+        NotFound(new RuntimeException(s"Dislike $personId / $restaurantId is not found"))
+    }.unsafeToFuture().asTwitter
+  }
 
   /*
   Move me
@@ -131,6 +189,11 @@ object Api {
         createPerson() :+: getPerson() :+: listPeople() :+: searchPerson() :+: deletePerson()
       )
 
+  val v1PreferenceRoutes =
+    "v1" :: "preference" :: (
+      createLike() :+: deleteLike() :+: getLikes() :+: getLike() :+: createDislike() :+: deleteDislike() :+: getDislikes() :+: getDislike()
+      )
+
   val v1InitRoutes =
     "v1" :: "init" :: (
         initDatabase()
@@ -140,7 +203,7 @@ object Api {
   TODO: Split up the API according to responsibility
    */
 
-  private def allEndpoints = echo :+: v1InitRoutes :+: v1RestaurantRoutes :+: v1PersonRoutes
+  private def allEndpoints = echo :+: v1InitRoutes :+: v1RestaurantRoutes :+: v1PersonRoutes :+: v1PreferenceRoutes
 
   /*
   TODO: Look into effective use of MethodRequiredFilter
