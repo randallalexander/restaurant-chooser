@@ -5,6 +5,7 @@ import cats.implicits._
 import doobie._
 import doobie.implicits._
 import doobie.postgres.sqlstate.class23.UNIQUE_VIOLATION
+import fs2.Stream
 import net.randallalexander.restaurant.chooser.errors.Errors.ConstraintViolation
 import net.randallalexander.restaurant.chooser.model._
 import shapeless.record._
@@ -29,15 +30,50 @@ object PersonDAO {
       }
   }
 
+  val selectAll = fr"""select id, nickname, fname, lname"""
+  val fromPerson = fr"""from person"""
+  private def streamToList (stream:Stream[ConnectionIO,Person]):IO[List[Person]] = {
+    stream
+      .list
+      .transact(xa)
+  }
+
   def getPerson(id:Int): IO[Option[Person]] = {
     getPersonQuery(id).transact(xa)
   }
 
-  private def getPersonQuery(personId:Int):ConnectionIO[Option[Person]] = {
-    sql"""
-         select id, nickname, fname, lname from person where id = $personId
-       """.query[Person].option
+  private def getPersonQuery(restId:Int):ConnectionIO[Option[Person]] = {
+    (selectAll ++ fromPerson ++
+      fr"""
+         where id = $restId
+       """).query[Person].option
   }
+
+
+  def listPeople(offset:Int, limit:Int): IO[List[Person]] = {
+    streamToList(listPersonQuery(offset,limit))
+  }
+
+  private def listPersonQuery(offset:Int, limit:Int):Stream[ConnectionIO,Person] = {
+    (selectAll ++ fromPerson ++
+      fr"""
+        limit $limit offset $offset
+       """).query[Person].process
+  }
+
+
+  def getPersonByName(name:String): IO[List[Person]] = {
+    streamToList(getPersonByNameQuery(name))
+  }
+
+  private def getPersonByNameQuery(name:String):Stream[ConnectionIO,Person] = {
+    val predicateValue = s"%$name%"
+    (selectAll ++ fromPerson ++
+      fr"""
+         where nickname ILIKE $predicateValue
+       """).query[Person].process
+  }
+
 
   def deletePerson(id:Int): IO[Int] = {
     deletePersonQuery(id).transact(xa)

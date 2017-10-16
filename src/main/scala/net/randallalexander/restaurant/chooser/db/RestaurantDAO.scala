@@ -35,10 +35,6 @@ object RestaurantDAO {
             ${geo.map(_.lat)})""".update.withUniqueGeneratedKeys[Int]("id")
   }
 
-  def getRestaurant(id:Int): IO[Option[Restaurant]] = {
-    getRestaurantQuery(id).transact(xa).map { _.map(mapRecordToResponse)}
-  }
-
   private def mapRecordToResponse(record:restaurantRec):Restaurant = {
     val geo = (record('lat), record('long)) match {
       case (Some(lat), Some(long)) => Some(Geo(lat, long))
@@ -73,7 +69,9 @@ object RestaurantDAO {
       .transact(xa)
   }
 
-  //TODO:Extract - where clause only diff in get
+  def getRestaurant(id:Int): IO[Option[Restaurant]] = {
+    getRestaurantQuery(id).transact(xa).map { _.map(mapRecordToResponse)}
+  }
 
   private def getRestaurantQuery(restId:Int):ConnectionIO[Option[restaurantRec]] = {
     (selectAll ++ fromRestaurant ++
@@ -84,10 +82,10 @@ object RestaurantDAO {
 
 
   def listRestaurants(offset:Int, limit:Int): IO[List[Restaurant]] = {
-    streamToList(listRestaurant(offset,limit))
+    streamToList(listRestaurantQuery(offset,limit))
   }
 
-  private def listRestaurant(offset:Int, limit:Int):Stream[ConnectionIO,restaurantRec] = {
+  private def listRestaurantQuery(offset:Int, limit:Int):Stream[ConnectionIO,restaurantRec] = {
     (selectAll ++ fromRestaurant ++
       fr"""
         limit $limit offset $offset

@@ -54,13 +54,6 @@ object Api {
     }.unsafeToFuture().asTwitter
   }
 
-  def deleteRestaurant(): Endpoint[Unit] = delete(path[Int]) { restaurantId:Int =>
-    RestaurantDAO.deleteRestaurant(restaurantId).map{
-      case 0 => NotFound(new RuntimeException(s"Person $restaurantId is not found"))
-      case _ => NoContent[Unit]
-    }.unsafeToFuture().asTwitter
-  }
-
   def listRestaurant(): Endpoint[List[Restaurant]] = get(paramOption("offset") :: paramOption("limit")) { (offsetOpt: Option[String], limitOpt: Option[String]) =>
     val offset = offsetOpt.flatMap(in => Try(in.toInt).toOption).fold(0)(identity)
     val limit = limitOpt.flatMap(in => Try(in.toInt).toOption).fold(5)(identity)
@@ -70,6 +63,13 @@ object Api {
   //partial match on name...like a contains
   def searchRestaurant(): Endpoint[List[Restaurant]] = get("name" :: path[String]) { name: String =>
     RestaurantDAO.getRestaurantByName(name).map(Ok).unsafeToFuture().asTwitter
+  }
+
+  def deleteRestaurant(): Endpoint[Unit] = delete(path[Int]) { restaurantId:Int =>
+    RestaurantDAO.deleteRestaurant(restaurantId).map{
+      case 0 => NotFound(new RuntimeException(s"Person $restaurantId is not found"))
+      case _ => NoContent[Unit]
+    }.unsafeToFuture().asTwitter
   }
 
   def personPreProcess: Endpoint[Person] = jsonBody[Person].map(_.copy(id = None))
@@ -91,6 +91,17 @@ object Api {
       case Some(result) => Ok(result)
       case None => NotFound(new RuntimeException(s"Person $personId is not found"))
     }.unsafeToFuture().asTwitter
+  }
+
+  def listPeople(): Endpoint[List[Person]] = get(paramOption("offset") :: paramOption("limit")) { (offsetOpt: Option[String], limitOpt: Option[String]) =>
+    val offset = offsetOpt.flatMap(in => Try(in.toInt).toOption).fold(0)(identity)
+    val limit = limitOpt.flatMap(in => Try(in.toInt).toOption).fold(5)(identity)
+    PersonDAO.listPeople(offset,limit).map(Ok).unsafeToFuture().asTwitter
+  }
+
+  //partial match on name...like a contains
+  def searchPerson(): Endpoint[List[Person]] = get("nickname" :: path[String]) { name: String =>
+    PersonDAO.getPersonByName(name).map(Ok).unsafeToFuture().asTwitter
   }
 
   def deletePerson(): Endpoint[Unit] = delete(path[Int]) { personId:Int =>
@@ -120,7 +131,7 @@ object Api {
 
   val v1PersonRoutes =
     "v1" :: "person" :: (
-        createPerson() :+: getPerson() :+: deletePerson()
+        createPerson() :+: getPerson() :+: listPeople() :+: searchPerson() :+: deletePerson()
       )
 
   val v1InitRoutes =
