@@ -31,7 +31,7 @@ object RestaurantDAO {
             ${restaurant.kindOfFood.map(_.name)},
             ${restaurant.pricePerPerson},
             ${geo.map(_.lat)},
-            ${geo.map(_.lat)})""".update.withUniqueGeneratedKeys("id")
+            ${geo.map(_.lat)})""".update.withUniqueGeneratedKeys[Int]("id")
   }
 
   def getRestaurant(id:Int): IO[Option[Restaurant]] = {

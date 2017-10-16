@@ -4,6 +4,8 @@ package net.randallalexander.restaurant.chooser
 import com.twitter.finagle.Service
 import com.twitter.finagle.http.filter.ExceptionFilter
 import com.twitter.finagle.http.{Request, Response}
+import net.randallalexander.restaurant.chooser.db.PersonDAO
+import net.randallalexander.restaurant.chooser.model.Person
 //import com.twitter.util.Future
 import net.randallalexander.restaurant.chooser.db.RestaurantDAO
 //import fs2.Stream
@@ -26,7 +28,7 @@ object Api {
     }
 
 
-  def initRestaurant(): Endpoint[Int] =
+  def initDatabase(): Endpoint[Int] =
     get("init") {
       /*
       Convert to stream?
@@ -41,20 +43,41 @@ object Api {
   def restaurantPreProcess: Endpoint[Restaurant] = jsonBody[Restaurant].map(_.copy(id = None))
 
   def createRestaurant(): Endpoint[Restaurant] = post(restaurantPreProcess) { restaurant: Restaurant =>
-    RestaurantDAO.createRestaurant(restaurant).map(Ok).unsafeToFuture().asTwitter.onFailure {
-      case th => th.printStackTrace()
-    }
+    RestaurantDAO.createRestaurant(restaurant).map(Ok).unsafeToFuture().asTwitter
   }
 
   def getRestaurant(): Endpoint[Restaurant] = get(path[Int]) { restaurantId:Int =>
-    /*
-    val geo:Geo =  Geo(1.0d,1.0d)
-    val address:Address = Address("addrLn1","cty","st",1,Some(geo))
-    val restaurant:Restaurant = Restaurant(None,"nam",address,Some(mexican),Some(burrito),Some(1.1d))
-    */
     RestaurantDAO.getRestaurant(restaurantId).map{
         case Some(result) => Ok(result)
         case None => NotFound(new RuntimeException(s"Restaurant $restaurantId is not found"))
+    }.unsafeToFuture().asTwitter
+  }
+
+  def personPreProcess: Endpoint[Person] = jsonBody[Person].map(_.copy(id = None))
+
+  def createPerson(): Endpoint[Person] = post(personPreProcess) { person: Person =>
+    PersonDAO
+      .createPerson(person)
+      .map{
+        _.fold(
+          constraintViolation => BadRequest(new RuntimeException(constraintViolation.message)),
+          person => Ok(person)
+        )
+      }
+      .unsafeToFuture().asTwitter
+  }
+
+  def getPerson(): Endpoint[Person] = get(path[Int]) { personId:Int =>
+    PersonDAO.getPerson(personId).map{
+      case Some(result) => Ok(result)
+      case None => NotFound(new RuntimeException(s"Person $personId is not found"))
+    }.unsafeToFuture().asTwitter
+  }
+
+  def deletePerson(): Endpoint[Unit] = delete(path[Int]) { personId:Int =>
+    PersonDAO.deletePerson(personId).map{
+      case 0 => NotFound(new RuntimeException(s"Person $personId is not found"))
+      case _ => NoContent[Unit]
     }.unsafeToFuture().asTwitter
   }
 
@@ -73,11 +96,24 @@ object Api {
 
   val v1RestaurantRoutes =
     "v1" :: "restaurant" :: (
-      initRestaurant() :+: createRestaurant() :+: getRestaurant()
-
+        createRestaurant() :+: getRestaurant()
       )
 
-  private def api = echo() :+: v1RestaurantRoutes
+  val v1PersonRoutes =
+    "v1" :: "person" :: (
+        createPerson() :+: getPerson() :+: deletePerson()
+      )
+
+  val v1InitRoutes =
+    "v1" :: "init" :: (
+        initDatabase()
+      )
+
+  /*
+  TODO: Split up the API according to responsibility
+   */
+
+  private def allEndpoints = echo() :+: v1RestaurantRoutes :+: v1PersonRoutes
 
   /*
   TODO: Look into effective use of MethodRequiredFilter
@@ -85,5 +121,5 @@ object Api {
   def apiService: Service[Request, Response] =
   RequestLoggingFilter andThen
     ExceptionFilter andThen
-    api.handle(ErrorHandler.apiErrorHandler).toService
+    allEndpoints.handle(ErrorHandler.apiErrorHandler).toService
 }

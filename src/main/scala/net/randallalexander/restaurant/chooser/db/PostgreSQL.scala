@@ -7,34 +7,15 @@ import doobie.implicits._
 
 object PostgreSQL {
 
-  def initDatabase: IO[Int] = (RestaurantDDL.initDatabaseQuery *> initDatabaseQuery).transact(xa)
+  def initDatabase: IO[Int] = (RestaurantDDL.initDatabaseQuery *> PersonDDL.initDatabaseQuery *> initDatabaseQuery).transact(xa)
 
   private def initDatabaseQuery = (
     dropLikes.run *>
     dropDislikes.run *>
-    dropPerson.run *>
 
-    createPerson.run *>
     createLikes.run *>
     createDislikes.run
     )
-
-///regular tables
-
-  private val dropPerson:Update0 =
-    sql"""
-    DROP TABLE IF EXISTS person CASCADE
-  """.update
-
-  private val createPerson:Update0 =
-    sql"""
-    CREATE TABLE person (
-      id SERIAL PRIMARY KEY,
-      nickname varchar NOT NULL unique,
-      fname varchar NOT NULL,
-      lname varchar NOT NULL
-    )
-  """.update
 
 ////join tables
 
