@@ -1,11 +1,13 @@
 package net.randallalexander.restaurant.chooser
 
 //import cats.effect.IO
+import cats.data.NonEmptyList
 import com.twitter.finagle.Service
 import com.twitter.finagle.http.filter.ExceptionFilter
 import com.twitter.finagle.http.{Request, Response}
 import net.randallalexander.restaurant.chooser.db.{PersonDAO, PreferenceDAO}
 import net.randallalexander.restaurant.chooser.model.{Person, Preference}
+import net.randallalexander.restaurant.chooser.service.RestaurantChooser
 import scala.util.Try
 //import com.twitter.util.Future
 import net.randallalexander.restaurant.chooser.db.RestaurantDAO
@@ -19,7 +21,6 @@ import net.randallalexander.restaurant.chooser.filter.RequestLoggingFilter
 import net.randallalexander.restaurant.chooser.utils.FutureConversion._
 import net.randallalexander.restaurant.chooser.model.Restaurant
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.util.Random
 
 object Api {
 
@@ -45,7 +46,7 @@ object Api {
     RestaurantDAO.createRestaurant(restaurant).map(Ok).unsafeToFuture().asTwitter
   }
 
-  def getRestaurant(): Endpoint[Restaurant] = get(path[Int]) { restaurantId:Int =>
+  def getRestaurant(): Endpoint[Restaurant] = get(path[String]) { restaurantId:String =>
     RestaurantDAO.getRestaurant(restaurantId).map{
         case Some(result) => Ok(result)
         case None => NotFound(new RuntimeException(s"Restaurant $restaurantId is not found"))
@@ -84,7 +85,7 @@ object Api {
       .unsafeToFuture().asTwitter
   }
 
-  def getPerson(): Endpoint[Person] = get(path[Int]) { personId:Int =>
+  def getPerson(): Endpoint[Person] = get(path[String]) { personId:String =>
     PersonDAO.getPerson(personId).map{
       case Some(result) => Ok(result)
       case None => NotFound(new RuntimeException(s"Person $personId is not found"))
@@ -109,6 +110,14 @@ object Api {
     }.unsafeToFuture().asTwitter
   }
 ////preference api
+  //as part of preference API??
+  def findRestaurant(): Endpoint[Restaurant] = get("restaurant" :: paramsNel("users")) { ids:NonEmptyList[String] =>
+    RestaurantChooser.chooseRestaurant(ids).map{
+      case Some(restaurant) => Ok(restaurant)
+      case None => NotFound(new RuntimeException("No preferred restaurant in common"))
+    }.unsafeToFuture().asTwitter
+  }
+
   //TODO:If we have a like something we need to make sure to remove any dislike and vica versa
   def createLike(): Endpoint[Preference] = post("like" :: jsonBody[Preference]) { preference: Preference =>
     PreferenceDAO.createLike(preference).map{
@@ -166,19 +175,6 @@ object Api {
     }.unsafeToFuture().asTwitter
   }
 
-  /*
-  Move me
-   */
-  def chooseRandomElement[T](items: Seq[T]): Option[T] = {
-    items.size match {
-      case 0 => None
-      case 1 => Some(items(0))
-      case _ =>
-        val randomValue = Random.nextInt(items.size)
-        Some(items(randomValue))
-    }
-  }
-
   val v1RestaurantRoutes =
     "v1" :: "restaurant" :: (
         createRestaurant() :+: getRestaurant() :+: listRestaurant() :+: searchRestaurant() :+: deleteRestaurant()
@@ -191,7 +187,7 @@ object Api {
 
   val v1PreferenceRoutes =
     "v1" :: "preference" :: (
-      createLike() :+: deleteLike() :+: getLikes() :+: getLike() :+: createDislike() :+: deleteDislike() :+: getDislikes() :+: getDislike()
+      createLike() :+: deleteLike() :+: getLikes() :+: getLike() :+: createDislike() :+: deleteDislike() :+: getDislikes() :+: getDislike() :+: findRestaurant()
       )
 
   val v1InitRoutes =

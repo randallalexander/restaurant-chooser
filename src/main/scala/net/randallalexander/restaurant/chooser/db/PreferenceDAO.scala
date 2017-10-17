@@ -1,5 +1,6 @@
 package net.randallalexander.restaurant.chooser.db
 
+import cats.data._
 import cats.effect.IO
 import cats.implicits._
 import doobie._
@@ -70,6 +71,40 @@ object PreferenceDAO {
       fr"""
          where person_id = $personId AND restaurant_id  = $restaurantId
        """).query[Preference].option
+  }
+
+  //Generic Queries
+  def getAllPreferredRestaurants(userIds:NonEmptyList[String]): IO[List[String]] = {
+    getAllPreferredRestaurantsQuery(userIds).transact(xa)
+  }
+
+  def getAllAcceptableRestaurants(userIds:NonEmptyList[String]): IO[List[String]] = {
+    getAllAcceptableRestaurantsQuery(userIds).transact(xa)
+  }
+
+  //exclude dislikes...needs further narrowing somehow
+  def getAllPreferredRestaurantsQuery(userIds:NonEmptyList[String]): ConnectionIO[List[String]] = {
+    (fr"""
+          SELECT restaurant_id
+          FROM likes
+          WHERE""" ++ Fragments.in(fr"person_id", userIds) ++
+    fr"""AND restaurant_id NOT IN (
+            SELECT restaurant_id FROM dislikes WHERE""" ++
+      Fragments.in(fr"person_id", userIds) ++
+    fr")"
+      ).query[String].list
+  }
+
+  //excludes dislikes...needs further narrowing down somehow
+  def getAllAcceptableRestaurantsQuery(userIds:NonEmptyList[String]): ConnectionIO[List[String]] = {
+    (fr"""
+          SELECT id
+          FROM restaurant
+          WHERE id NOT IN (
+            SELECT restaurant_id FROM dislikes WHERE""" ++
+      Fragments.in(fr"person_id", userIds) ++
+      fr")"
+    ).query[String].list
   }
 }
 

@@ -38,14 +38,14 @@ object PersonDAO {
       .transact(xa)
   }
 
-  def getPerson(id:Int): IO[Option[Person]] = {
-    getPersonQuery(id).transact(xa)
+  def getPerson(personId:String): IO[Option[Person]] = {
+    getPersonQuery(personId).transact(xa)
   }
 
-  private def getPersonQuery(restId:Int):ConnectionIO[Option[Person]] = {
+  private def getPersonQuery(personId:String):ConnectionIO[Option[Person]] = {
     (selectAll ++ fromPerson ++
       fr"""
-         where id = $restId
+         where id = $personId
        """).query[Person].option
   }
 

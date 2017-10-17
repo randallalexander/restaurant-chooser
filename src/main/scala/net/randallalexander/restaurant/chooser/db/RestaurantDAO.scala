@@ -71,11 +71,11 @@ object RestaurantDAO {
       .transact(xa)
   }
 
-  def getRestaurant(id:Int): IO[Option[Restaurant]] = {
+  def getRestaurant(id:String): IO[Option[Restaurant]] = {
     getRestaurantQuery(id).transact(xa).map { _.map(mapRecordToResponse)}
   }
 
-  private def getRestaurantQuery(restId:Int):ConnectionIO[Option[restaurantRec]] = {
+  private def getRestaurantQuery(restId:String):ConnectionIO[Option[restaurantRec]] = {
     (selectAll ++ fromRestaurant ++
       fr"""
          where id = $restId
