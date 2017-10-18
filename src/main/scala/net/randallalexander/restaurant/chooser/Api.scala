@@ -70,7 +70,15 @@ object Api {
       case _ => NoContent[Unit]
     }.unsafeToFuture().asTwitter
   }
-///person API
+
+  def findRestaurant(): Endpoint[Restaurant] = get("choose" :: paramsNel("users")) { ids:NonEmptyList[String] =>
+    RestaurantChooser.chooseRestaurant(ids).map{
+      case Some(restaurant) => Ok(restaurant)
+      case None => NotFound(new RuntimeException("No preferred restaurant in common"))
+    }.unsafeToFuture().asTwitter
+  }
+
+  ///person API
   def personPreProcess: Endpoint[Person] = jsonBody[Person].map(_.copy(id = None))
 
   def createPerson(): Endpoint[Person] = post(personPreProcess) { person: Person =>
@@ -110,14 +118,6 @@ object Api {
     }.unsafeToFuture().asTwitter
   }
 ////preference api
-  //as part of preference API??
-  def findRestaurant(): Endpoint[Restaurant] = get("restaurant" :: paramsNel("users")) { ids:NonEmptyList[String] =>
-    RestaurantChooser.chooseRestaurant(ids).map{
-      case Some(restaurant) => Ok(restaurant)
-      case None => NotFound(new RuntimeException("No preferred restaurant in common"))
-    }.unsafeToFuture().asTwitter
-  }
-
   //TODO:If we have a like something we need to make sure to remove any dislike and vica versa
   def createLike(): Endpoint[Preference] = post("like" :: jsonBody[Preference]) { preference: Preference =>
     PreferenceDAO.createLike(preference).map{
@@ -177,7 +177,7 @@ object Api {
 
   val v1RestaurantRoutes =
     "v1" :: "restaurant" :: (
-        createRestaurant() :+: getRestaurant() :+: listRestaurant() :+: searchRestaurant() :+: deleteRestaurant()
+        createRestaurant() :+: getRestaurant() :+: listRestaurant() :+: searchRestaurant() :+: deleteRestaurant() :+: findRestaurant()
       )
 
   val v1PersonRoutes =
@@ -187,7 +187,7 @@ object Api {
 
   val v1PreferenceRoutes =
     "v1" :: "preference" :: (
-      createLike() :+: deleteLike() :+: getLikes() :+: getLike() :+: createDislike() :+: deleteDislike() :+: getDislikes() :+: getDislike() :+: findRestaurant()
+      createLike() :+: deleteLike() :+: getLikes() :+: getLike() :+: createDislike() :+: deleteDislike() :+: getDislikes() :+: getDislike()
       )
 
   val v1InitRoutes =
