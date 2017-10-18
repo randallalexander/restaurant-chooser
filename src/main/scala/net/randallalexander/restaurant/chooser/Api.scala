@@ -13,7 +13,7 @@ import scala.util.Try
 import net.randallalexander.restaurant.chooser.db.RestaurantDAO
 //import fs2.Stream
 import net.randallalexander.restaurant.chooser.db.PostgreSQL
-
+import io.circe._
 import io.finch._
 import io.finch.circe._
 import net.randallalexander.restaurant.chooser.errors.ErrorHandler
@@ -23,6 +23,13 @@ import net.randallalexander.restaurant.chooser.model.Restaurant
 import scala.concurrent.ExecutionContext.Implicits.global
 
 object Api {
+
+  /*
+    Gets the exception message and transforms it to a json body
+   */
+  implicit val encodeExceptionCirce: Encoder[Exception] = Encoder.instance(e =>
+    Json.obj("message" -> Option(e.getMessage).fold(Json.Null)(Json.fromString))
+  )
 
   def echo(): Endpoint[String] =
     get("v1" :: "echo" :: param("what")) { (what: String) =>
