@@ -61,7 +61,7 @@ object RestaurantDAO {
   }
 
   //should be able to use LabelledGeneric[Restaurant] instead but can't get the type info
-  type restaurantRec = Record.`'id -> Option[String], 'name -> String, 'addressLine1 -> String, 'city -> String, 'state -> String, 'zip -> Int, 'lat -> Option[Double], 'long -> Option[Double], 'ethnicType -> Option[String], 'foodType -> Option[String], 'pricePerPerson -> Option[Double]`.T
+  type restaurantRec = Record.`'id -> Option[String], 'name -> String, 'addressLine1 -> String, 'city -> String, 'state -> String, 'zip -> String, 'lat -> Option[Double], 'long -> Option[Double], 'ethnicType -> Option[String], 'foodType -> Option[String], 'pricePerPerson -> Option[Double]`.T
   val selectAll = fr"""select id, name, addressLine1, city, state, zip, cord_lat, cord_long, ethnic_type, food_type, price_per_person"""
   val fromRestaurant = fr"""from restaurant"""
   private def streamToList (stream:Stream[ConnectionIO,restaurantRec]):IO[List[Restaurant]] = {
@@ -147,7 +147,7 @@ object RestaurantDDL {
       addressLine1 VARCHAR NOT NULL,
       city VARCHAR NOT NULL,
       state VARCHAR(2) NOT NULL,
-      zip NUMERIC(5, 0) NOT NULL,
+      zip VARCHAR(5) NOT NULL,
       ethnic_type VARCHAR,
       food_type VARCHAR,
       price_per_person NUMERIC (5,2),

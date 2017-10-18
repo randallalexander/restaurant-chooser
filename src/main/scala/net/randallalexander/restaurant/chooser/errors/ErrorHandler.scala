@@ -1,5 +1,6 @@
 package net.randallalexander.restaurant.chooser.errors
 
+import io.circe.DecodingFailure
 import io.finch.Error
 import io.finch.{Output, _}
 import journal.Logger
@@ -13,7 +14,11 @@ object ErrorHandler {
       BadRequest(e)
     case e: Error.NotParsed =>
       logger.info(s"Can not parse request: ${e.getMessage()}",e)
-      BadRequest(e)
+      e.getCause() match {
+          //Create new exception to get rid of the HCursor information from output message
+        case df:DecodingFailure => BadRequest(new RuntimeException(df.message))
+        case _ => BadRequest(e)
+      }
     case e: Error.NotValid =>
       logger.info(s"Finch validation error: ${e.getMessage()}",e)
       BadRequest(e)

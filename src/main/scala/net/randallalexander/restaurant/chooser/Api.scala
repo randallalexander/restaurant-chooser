@@ -42,10 +42,6 @@ object Api {
       PostgreSQL.initDatabase.map(Ok).unsafeToFuture().asTwitter
     }
 
-  /*
-  def chooseRestaurant(): Endpoint[Restaurant] = get("v1" :: "choose" :: "restaurant" :: params("who")) { (who: Seq[String]) =>
-  }
-*/
 ////restaurantAPI
   def restaurantPreProcess: Endpoint[Restaurant] = jsonBody[Restaurant].map(_.copy(id = None))
 

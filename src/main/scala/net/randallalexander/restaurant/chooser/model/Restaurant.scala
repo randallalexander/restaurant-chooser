@@ -12,7 +12,22 @@ import net.randallalexander.restaurant.chooser.model.KindOfFood._
   probably need a search api to make that useable
 
  */
+object Validation {
+  def state(hCursor: HCursor): Boolean = {
+    hCursor.downField("state").focus.flatMap(_.asString) match {
+      case Some(value) => (value.size == 2) //Good enough for now
+      case _ => false
+    }
+  }
 
+  def zip(hCursor: HCursor): Boolean = {
+    hCursor.downField("zip").focus.flatMap(_.asString) match {
+      case Some(value) => (value.length == 5) && value.matches("\\d") //Good enough for now
+      case _ => false
+    }
+  }
+}
+////
 case class Restaurant (id:Option[String], name:String, address: Address, ethnicity: Option[Ethnicity], kindOfFood:Option[KindOfFood], pricePerPerson:Option[Double])
 
 object Restaurant {
@@ -20,10 +35,10 @@ object Restaurant {
   implicit val restaurantEncoder: Encoder[Restaurant] = deriveEncoder[Restaurant]
 }
 
-case class Address(addressLine1:String,city:String,state:String,zip:Int, geo:Option[Geo])
+case class Address(addressLine1:String,city:String,state:String,zip:String, geo:Option[Geo])
 
 object Address {
-  implicit val addressDecoder: Decoder[Address] = deriveDecoder[Address]
+  implicit val addressDecoder: Decoder[Address] = deriveDecoder[Address].validate(Validation.state,"Invalid state code").validate(Validation.zip,"Invalid zip code")
   implicit val addressEncoder: Encoder[Address] = deriveEncoder[Address]
 }
 
