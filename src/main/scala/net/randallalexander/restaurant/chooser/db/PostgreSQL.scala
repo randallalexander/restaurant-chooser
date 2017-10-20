@@ -5,5 +5,10 @@ import cats.implicits._
 import doobie.implicits._
 
 object PostgreSQL {
-  def initDatabase: IO[Int] = (RestaurantDDL.initDatabaseQuery *> PersonDDL.initDatabaseQuery *> PreferenceDDL.initDatabaseQuery).transact(xa)
+  def initDatabase: IO[Int] = (
+    RestaurantDDL.initDatabaseQuery *>
+      PersonDDL.initDatabaseQuery *>
+      PreferenceDDL.initDatabaseQuery *>
+      TransactionDDL.initDatabaseQuery
+    ).transact(xa)
 }

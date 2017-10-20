@@ -28,7 +28,7 @@ object RestaurantDAO {
             ${restaurant.name.trim},
             ${address.addressLine1.trim},
             ${address.city.trim},
-            ${address.state.trim},
+            ${address.state.trim.toUpperCase},
             ${address.zip},
             ${restaurant.ethnicity.map(_.name.trim)},
             ${restaurant.kindOfFood.map(_.name.trim)},
@@ -108,11 +108,11 @@ object RestaurantDAO {
   }
 
 
-  def deleteRestaurant(id:Int): IO[Int] = {
+  def deleteRestaurant(id:String): IO[Int] = {
     deleteRestaurantQuery(id).transact(xa)
   }
 
-  private def deleteRestaurantQuery(restaurantId:Int): ConnectionIO[Int] = {
+  private def deleteRestaurantQuery(restaurantId:String): ConnectionIO[Int] = {
     sql"""
       DELETE FROM restaurant
       WHERE id = $restaurantId
@@ -142,7 +142,7 @@ object RestaurantDDL {
   private val createRestaurant:Update0 =
     sql"""
     CREATE TABLE restaurant (
-      id VARCHAR PRIMARY KEY,
+      id VARCHAR NOT NULL PRIMARY KEY,
       name VARCHAR NOT NULL,
       addressLine1 VARCHAR NOT NULL,
       city VARCHAR NOT NULL,

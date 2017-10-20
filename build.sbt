@@ -21,7 +21,7 @@ val compilerOptions = Seq(
   "-Ywarn-inaccessible",
   "-Ywarn-numeric-widen",
   "-Ywarn-unused",
-//  "-Ywarn-unused-import",
+  "-Ywarn-unused-import",
   "-Ywarn-value-discard")
 
 val finchVersion = "0.16.0-M3"

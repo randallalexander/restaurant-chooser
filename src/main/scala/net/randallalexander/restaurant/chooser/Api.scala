@@ -5,8 +5,8 @@ import cats.data.NonEmptyList
 import com.twitter.finagle.Service
 import com.twitter.finagle.http.filter.ExceptionFilter
 import com.twitter.finagle.http.{Request, Response}
-import net.randallalexander.restaurant.chooser.db.{PersonDAO, PreferenceDAO}
-import net.randallalexander.restaurant.chooser.model.{Person, Preference}
+import net.randallalexander.restaurant.chooser.db.{PersonDAO, PreferenceDAO, TransactionDAO}
+import net.randallalexander.restaurant.chooser.model.{Person, Preference, Transaction}
 import net.randallalexander.restaurant.chooser.service.RestaurantChooser
 import scala.util.Try
 //import com.twitter.util.Future
@@ -67,7 +67,7 @@ object Api {
     RestaurantDAO.getRestaurantByName(name).map(Ok).unsafeToFuture().asTwitter
   }
 
-  def deleteRestaurant(): Endpoint[Unit] = delete(path[Int]) { restaurantId:Int =>
+  def deleteRestaurant(): Endpoint[Unit] = delete(path[String]) { restaurantId:String =>
     RestaurantDAO.deleteRestaurant(restaurantId).map{
       case 0 => NotFound(new RuntimeException(s"Person $restaurantId is not found"))
       case _ => NoContent[Unit]
@@ -178,6 +178,28 @@ object Api {
     }.unsafeToFuture().asTwitter
   }
 
+////Transaction API
+  def createTransaction(): Endpoint[Transaction] = post(jsonBody[Transaction]) { transaction: Transaction =>
+    TransactionDAO.createTransaction(transaction).map(Ok).unsafeToFuture().asTwitter
+  }
+
+  def getTransaction(): Endpoint[Option[Transaction]] = get(path[String]) { transactionId: String =>
+    TransactionDAO.getTransaction(transactionId).map(Ok).unsafeToFuture().asTwitter
+  }
+
+  def deleteTransaction(): Endpoint[Unit] = delete(path[String]) { transactionId:String =>
+    TransactionDAO.deleteTransaction(transactionId).map{
+      case 0 => NotFound(new RuntimeException(s"TransactionId $transactionId is not found"))
+      case _ => NoContent[Unit]
+    }.unsafeToFuture().asTwitter
+  }
+
+  val v1TransactionRoutes =
+    "v1" :: "transaction" :: (
+      createTransaction() :+: getTransaction() :+: deleteTransaction()
+      )
+
+
   val v1RestaurantRoutes =
     "v1" :: "restaurant" :: (
         createRestaurant() :+: getRestaurant() :+: listRestaurant() :+: searchRestaurant() :+: deleteRestaurant() :+: findRestaurant()
@@ -202,7 +224,7 @@ object Api {
   TODO: Split up the API according to responsibility
    */
 
-  private def allEndpoints = echo :+: v1InitRoutes :+: v1RestaurantRoutes :+: v1PersonRoutes :+: v1PreferenceRoutes
+  private def allEndpoints = echo :+: v1InitRoutes :+: v1RestaurantRoutes :+: v1PersonRoutes :+: v1PreferenceRoutes :+: v1TransactionRoutes
 
   /*
   TODO: Look into effective use of MethodRequiredFilter
