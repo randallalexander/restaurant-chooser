@@ -35,6 +35,15 @@ object TransactionDAO {
   private def getTransactionQuery(transactionId:String):ConnectionIO[Option[Transaction]] = {
     sql"""SELECT id, restaurant_id, total, number_of_people FROM transactions WHERE id = $transactionId""".query[Transaction].option
   }
+
+  private [db] def getRestaurantAverageQuery(restaurantId:String):ConnectionIO[Option[Double]] = {
+    sql"""SELECT SUM(total), SUM(number_of_people) FROM transactions WHERE restaurant_id = $restaurantId""".query[(Double,Int)].option.map(_.map{tuple => tuple._1 / tuple._2.toDouble})
+  }
+
+  private [db] def getDeleteTransactionsByRestaurantIdQuery(restaurantId:String):Update0 = {
+    sql"""DELETE FROM transactions WHERE restaurant_id = $restaurantId""".update
+  }
+
 }
 
 object TransactionDDL {

@@ -12,7 +12,6 @@ import net.randallalexander.restaurant.chooser.model.KindOfFood._
   probably need a search api to make that useable
 
  */
-////
 case class Restaurant (id:Option[String], name:String, address: Address, ethnicity: Option[Ethnicity], kindOfFood:Option[KindOfFood], pricePerPerson:Option[Double])
 
 object Restaurant {

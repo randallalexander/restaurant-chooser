@@ -22,19 +22,18 @@ object RestaurantDAO {
     val geo = address.geo
     sql"""
           insert into restaurant (
-          id, name, addressLine1, city, state, zip, ethnic_type, food_type, price_per_person,cord_lat,cord_long)
+          id, name, addressLine1, city, state, zip, ethnic_type, food_type,cord_lat,cord_long)
            values (
             ${restaurant.id},
             ${restaurant.name.trim},
             ${address.addressLine1.trim},
             ${address.city.trim},
             ${address.state.trim.toUpperCase},
-            ${address.zip},
+            ${address.zip.trim.toUpperCase},
             ${restaurant.ethnicity.map(_.name.trim)},
             ${restaurant.kindOfFood.map(_.name.trim)},
-            ${restaurant.pricePerPerson},
             ${geo.map(_.lat)},
-            ${geo.map(_.lat)})""".update
+            ${geo.map(_.long)})""".update
   }
 
   private def mapRecordToResponse(record:restaurantRec):Restaurant = {
@@ -56,23 +55,33 @@ object RestaurantDAO {
       address = addr,
       ethnicity = record('ethnicType).flatMap(EthnicityOps.toEnum),
       kindOfFood = record('foodType).flatMap(KindOfFoodOps.toEnum),
-      pricePerPerson = record('pricePerPerson)
+      pricePerPerson = None
     )
   }
 
   //should be able to use LabelledGeneric[Restaurant] instead but can't get the type info
-  type restaurantRec = Record.`'id -> Option[String], 'name -> String, 'addressLine1 -> String, 'city -> String, 'state -> String, 'zip -> String, 'lat -> Option[Double], 'long -> Option[Double], 'ethnicType -> Option[String], 'foodType -> Option[String], 'pricePerPerson -> Option[Double]`.T
-  val selectAll = fr"""select id, name, addressLine1, city, state, zip, cord_lat, cord_long, ethnic_type, food_type, price_per_person"""
+  type restaurantRec = Record.`'id -> Option[String], 'name -> String, 'addressLine1 -> String, 'city -> String, 'state -> String, 'zip -> String, 'lat -> Option[Double], 'long -> Option[Double], 'ethnicType -> Option[String], 'foodType -> Option[String]`.T
+  val selectAll = fr"""select id, name, addressLine1, city, state, zip, cord_lat, cord_long, ethnic_type, food_type"""
   val fromRestaurant = fr"""from restaurant"""
   private def streamToList (stream:Stream[ConnectionIO,restaurantRec]):IO[List[Restaurant]] = {
     stream
       .map(mapRecordToResponse)
+      .evalMap {
+        restaurant =>
+          val averageConnIO = TransactionDAO.getRestaurantAverageQuery(restaurant.id.getOrElse(""))
+          averageConnIO.map(_.fold(restaurant)(amount => restaurant.copy(pricePerPerson = Some(amount))))
+      }
       .list
       .transact(xa)
   }
 
   def getRestaurant(id:String): IO[Option[Restaurant]] = {
-    getRestaurantQuery(id).transact(xa).map { _.map(mapRecordToResponse)}
+    (for {
+      restaurantOpt <- getRestaurantQuery(id).map { _.map(mapRecordToResponse)}
+      averageOpt <- TransactionDAO.getRestaurantAverageQuery(id)
+    } yield {
+      restaurantOpt.map(_.copy(pricePerPerson = averageOpt))
+    }).transact(xa)
   }
 
   private def getRestaurantQuery(restId:String):ConnectionIO[Option[restaurantRec]] = {
@@ -113,10 +122,12 @@ object RestaurantDAO {
   }
 
   private def deleteRestaurantQuery(restaurantId:String): ConnectionIO[Int] = {
-    sql"""
-      DELETE FROM restaurant
-      WHERE id = $restaurantId
-       """.update.run
+    for {
+      _ <- TransactionDAO.getDeleteTransactionsByRestaurantIdQuery(restaurantId).run
+      resultCode <- sql"""DELETE FROM restaurant WHERE id = $restaurantId""".update.run
+    } yield {
+      resultCode
+    }
   }
 }
 
@@ -150,7 +161,6 @@ object RestaurantDDL {
       zip VARCHAR(5) NOT NULL,
       ethnic_type VARCHAR,
       food_type VARCHAR,
-      price_per_person NUMERIC (5,2),
       cord_lat NUMERIC(11, 8),
       cord_long NUMERIC(11, 8)
     )
