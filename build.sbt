@@ -3,7 +3,7 @@ import sbt.Resolver
 
 val baseSettings = Seq(
   organization := "net.randallalexander",
-  scalaVersion := "2.12.3"
+  scalaVersion := "2.12.4"
 )
 
 val compilerOptions = Seq(
@@ -24,14 +24,15 @@ val compilerOptions = Seq(
   "-Ywarn-unused-import",
   "-Ywarn-value-discard")
 
-val finchVersion = "0.16.0-M3"
-
 //Taken from Finch build file
+val finchVersion = "0.16.0-M4"
 val shapelessVersion = "2.3.2"
-val catsVersion = "1.0.0-MF"
-val circeVersion = "0.9.0-M1"
-val doobieVersion = "0.5.0-M8"
-val fs2Version = "0.10.0-M6"
+val catsVersion = "1.0.0-RC1"
+val circeVersion = "0.9.0-M2"
+
+//Taken from Doobie build file
+val doobieVersion = "0.5.0-M9"
+val fs2Version = "0.10.0-M8"
 
 
 lazy val buildSettings = Seq(
