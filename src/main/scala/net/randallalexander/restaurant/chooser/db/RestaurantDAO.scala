@@ -1,5 +1,6 @@
 package net.randallalexander.restaurant.chooser.db
 
+import cats.data.OptionT
 import cats.effect.IO
 import cats.implicits._
 import doobie._
@@ -77,11 +78,11 @@ object RestaurantDAO {
 
   def getRestaurant(id:String): IO[Option[Restaurant]] = {
     (for {
-      restaurantOpt <- getRestaurantQuery(id).map { _.map(mapRecordToResponse)}
-      averageOpt <- TransactionDAO.getRestaurantAverageQuery(id)
+      restaurant <- OptionT[ConnectionIO,Restaurant](getRestaurantQuery(id).map { _.map(mapRecordToResponse)})
+      average <- OptionT[ConnectionIO,Double](TransactionDAO.getRestaurantAverageQuery(id))
     } yield {
-      restaurantOpt.map(_.copy(pricePerPerson = averageOpt))
-    }).transact(xa)
+      restaurant.copy(pricePerPerson = Some(average))
+    }).value.transact(xa)
   }
 
   private def getRestaurantQuery(restId:String):ConnectionIO[Option[restaurantRec]] = {
