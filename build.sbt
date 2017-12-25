@@ -25,15 +25,14 @@ val compilerOptions = Seq(
   "-Ywarn-value-discard")
 
 //Taken from Finch build file
-val finchVersion = "0.16.0-M4"
+val finchVersion = "0.16.0-M6"
 val shapelessVersion = "2.3.2"
-val catsVersion = "1.0.0-RC1"
-val circeVersion = "0.9.0-M2"
+val catsVersion = "1.0.0-RC2"
+val circeVersion = "0.9.0-M3"
 
 //Taken from Doobie build file
-val doobieVersion = "0.5.0-M9"
-val fs2Version = "0.10.0-M8"
-
+val doobieVersion = "0.5.0-M11"
+val fs2Version = "0.10.0-M10"
 
 lazy val buildSettings = Seq(
   javacOptions ++= Seq("-source", "1.8", "-target", "1.8", "-Xlint"),

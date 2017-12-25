@@ -2,6 +2,7 @@ package net.randallalexander.restaurant.chooser
 
 import cats.effect.IO
 import com.typesafe.config.{Config, ConfigFactory}
+import doobie.hikari.HikariTransactor.newHikariTransactor
 //import doobie._
 //import doobie.implicits._
 import doobie.hikari.HikariTransactor
@@ -13,7 +14,7 @@ import doobie.hikari.HikariTransactor
 package object db {
   private val config: Config = IO.pure(ConfigFactory.load()).map(_.getConfig("database")).unsafeRunSync()
 
-  val xa: HikariTransactor[IO] = HikariTransactor[IO](
+  val xa: HikariTransactor[IO] = newHikariTransactor[IO](
     "org.postgresql.Driver", "jdbc:postgresql:restaurant", "postgres", config.getString("password")
   ).unsafeRunSync()
 

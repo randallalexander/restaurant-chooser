@@ -16,6 +16,7 @@ import net.randallalexander.restaurant.chooser.db.PostgreSQL
 import io.circe._
 import io.finch._
 import io.finch.circe._
+import io.finch.syntax.{delete,get,post}
 import net.randallalexander.restaurant.chooser.errors.ErrorHandler
 import net.randallalexander.restaurant.chooser.filter.RequestLoggingFilter
 import net.randallalexander.restaurant.chooser.utils.FutureConversion._
