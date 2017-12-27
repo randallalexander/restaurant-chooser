@@ -81,3 +81,10 @@ lazy val root = project
   .settings(
     name := "restaurant-chooser")
   .settings(baseSettings ++ buildSettings)
+  .dependsOn(service)
+
+lazy val service = project
+  .in(file("service"))
+  .settings(
+    name := "service")
+  .settings(baseSettings ++ buildSettings)
