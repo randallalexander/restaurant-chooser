@@ -6,4 +6,4 @@ addSbtPlugin("pl.project13.scala"  % "sbt-jmh"               % "0.2.18")
 addSbtPlugin("com.timushev.sbt"    % "sbt-updates"           % "0.3.0")
 addSbtPlugin("com.github.tkawachi" % "sbt-doctest"           % "0.4.1")
 
-//addSbtPlugin("ch.epfl.scala" % "sbt-bloop" % "66018e0a")
+addSbtPlugin("ch.epfl.scala" % "sbt-bloop" % "eeb500c5")
