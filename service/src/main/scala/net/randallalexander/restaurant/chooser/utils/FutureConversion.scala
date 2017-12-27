@@ -1,7 +1,6 @@
 package net.randallalexander.restaurant.chooser.utils
 
 import com.twitter.util.{Return, Throw, Future => TFuture, Promise => TPromise}
-
 import scala.concurrent.{ExecutionContext, Future => SFuture, Promise => SPromise}
 import scala.util.{Failure, Success}
 

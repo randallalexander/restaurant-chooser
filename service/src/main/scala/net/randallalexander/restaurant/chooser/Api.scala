@@ -1,6 +1,5 @@
 package net.randallalexander.restaurant.chooser
 
-//import cats.effect.IO
 import cats.data.NonEmptyList
 import com.twitter.finagle.Service
 import com.twitter.finagle.http.filter.ExceptionFilter
@@ -9,9 +8,7 @@ import net.randallalexander.restaurant.chooser.db.{PersonDAO, PreferenceDAO, Tra
 import net.randallalexander.restaurant.chooser.model.{Person, Preference, Transaction}
 import net.randallalexander.restaurant.chooser.service.RestaurantChooser
 import scala.util.Try
-//import com.twitter.util.Future
 import net.randallalexander.restaurant.chooser.db.RestaurantDAO
-//import fs2.Stream
 import net.randallalexander.restaurant.chooser.db.PostgreSQL
 import io.circe._
 import io.finch._
@@ -19,9 +16,8 @@ import io.finch.circe._
 import io.finch.syntax.{delete,get,post}
 import net.randallalexander.restaurant.chooser.errors.ErrorHandler
 import net.randallalexander.restaurant.chooser.filter.RequestLoggingFilter
-import net.randallalexander.restaurant.chooser.utils.FutureConversion._
+import net.randallalexander.restaurant.chooser.utils.IOTaskConversion._
 import net.randallalexander.restaurant.chooser.model.Restaurant
-import scala.concurrent.ExecutionContext.Implicits.global
 
 object Api {
 
@@ -40,46 +36,46 @@ object Api {
 
   def initDatabase(): Endpoint[Int] =
     get("db") {
-      PostgreSQL.initDatabase.map(Ok).unsafeToFuture().asTwitter
+      PostgreSQL.initDatabase.map(Ok).asTFuture
     }
 
 ////restaurantAPI
   def restaurantPreProcess: Endpoint[Restaurant] = jsonBody[Restaurant].map(_.copy(id = None))
 
   def createRestaurant(): Endpoint[Restaurant] = post(restaurantPreProcess) { restaurant: Restaurant =>
-    RestaurantDAO.createRestaurant(restaurant).map(Ok).unsafeToFuture().asTwitter
+    RestaurantDAO.createRestaurant(restaurant).map(Ok).asTFuture
   }
 
   def getRestaurant(): Endpoint[Restaurant] = get(path[String]) { restaurantId:String =>
     RestaurantDAO.getRestaurant(restaurantId).map{
         case Some(result) => Ok(result)
         case None => NotFound(new RuntimeException(s"Restaurant $restaurantId is not found"))
-    }.unsafeToFuture().asTwitter
+    }.asTFuture
   }
 
   def listRestaurant(): Endpoint[List[Restaurant]] = get(paramOption("offset") :: paramOption("limit")) { (offsetOpt: Option[String], limitOpt: Option[String]) =>
     val offset = offsetOpt.flatMap(in => Try(in.toInt).toOption).fold(0)(identity)
     val limit = limitOpt.flatMap(in => Try(in.toInt).toOption).fold(5)(identity)
-    RestaurantDAO.listRestaurants(offset,limit).map(Ok).unsafeToFuture().asTwitter
+    RestaurantDAO.listRestaurants(offset,limit).map(Ok).asTFuture
   }
 
   //partial match on name...like a contains
   def searchRestaurant(): Endpoint[List[Restaurant]] = get("name" :: path[String]) { name: String =>
-    RestaurantDAO.getRestaurantByName(name).map(Ok).unsafeToFuture().asTwitter
+    RestaurantDAO.getRestaurantByName(name).map(Ok).asTFuture
   }
 
   def deleteRestaurant(): Endpoint[Unit] = delete(path[String]) { restaurantId:String =>
     RestaurantDAO.deleteRestaurant(restaurantId).map{
       case 0 => NotFound(new RuntimeException(s"Person $restaurantId is not found"))
       case _ => NoContent[Unit]
-    }.unsafeToFuture().asTwitter
+    }.asTFuture
   }
 
   def findRestaurant(): Endpoint[Restaurant] = get("choose" :: paramsNel("users")) { ids:NonEmptyList[String] =>
     RestaurantChooser.chooseRestaurant(ids).map{
       case Some(restaurant) => Ok(restaurant)
       case None => NotFound(new RuntimeException("No preferred restaurant in common"))
-    }.unsafeToFuture().asTwitter
+    }.asTFuture
   }
 
   ///person API
@@ -94,32 +90,32 @@ object Api {
           person => Ok(person)
         )
       }
-      .unsafeToFuture().asTwitter
+      .asTFuture
   }
 
   def getPerson(): Endpoint[Person] = get(path[String]) { personId:String =>
     PersonDAO.getPerson(personId).map{
       case Some(result) => Ok(result)
       case None => NotFound(new RuntimeException(s"Person $personId is not found"))
-    }.unsafeToFuture().asTwitter
+    }.asTFuture
   }
 
   def listPeople(): Endpoint[List[Person]] = get(paramOption("offset") :: paramOption("limit")) { (offsetOpt: Option[String], limitOpt: Option[String]) =>
     val offset = offsetOpt.flatMap(in => Try(in.toInt).toOption).fold(0)(identity)
     val limit = limitOpt.flatMap(in => Try(in.toInt).toOption).fold(5)(identity)
-    PersonDAO.listPeople(offset,limit).map(Ok).unsafeToFuture().asTwitter
+    PersonDAO.listPeople(offset,limit).map(Ok).asTFuture
   }
 
   //partial match on name...like a contains
   def searchPerson(): Endpoint[List[Person]] = get("nickname" :: path[String]) { name: String =>
-    PersonDAO.getPersonByName(name).map(Ok).unsafeToFuture().asTwitter
+    PersonDAO.getPersonByName(name).map(Ok).asTFuture
   }
 
   def deletePerson(): Endpoint[Unit] = delete(path[Int]) { personId:Int =>
     PersonDAO.deletePerson(personId).map{
       case 0 => NotFound(new RuntimeException(s"Person $personId is not found"))
       case _ => NoContent[Unit]
-    }.unsafeToFuture().asTwitter
+    }.asTFuture
   }
 ////preference api
   //TODO:If we have a like something we need to make sure to remove any dislike and vica versa
@@ -129,18 +125,18 @@ object Api {
         constraintViolation => BadRequest(new RuntimeException(constraintViolation.message)),
         preference => Ok(preference)
       )
-    }.unsafeToFuture().asTwitter
+    }.asTFuture
   }
 
   def deleteLike(): Endpoint[Unit] = delete("like" :: path[String] :: path[String]) { (personId:String, restaurantId:String) =>
     PreferenceDAO.deleteLike(personId, restaurantId).map{
       case 0 => NotFound(new RuntimeException(s"Like $personId / $restaurantId is not found"))
       case _ => NoContent[Unit]
-    }.unsafeToFuture().asTwitter
+    }.asTFuture
   }
 
   def getLikes(): Endpoint[List[Preference]] = get("like" :: "person" :: path[String]) { personId: String =>
-    PreferenceDAO.getLikesByPerson(personId).map(Ok).unsafeToFuture().asTwitter
+    PreferenceDAO.getLikesByPerson(personId).map(Ok).asTFuture
   }
 
   def getLike(): Endpoint[Preference] = get("like" :: path[String] :: path[String]) { (personId: String, restaurantId: String)=>
@@ -148,7 +144,7 @@ object Api {
       case Some(preference) => Ok(preference)
       case None =>
         NotFound(new RuntimeException(s"Like $personId / $restaurantId is not found"))
-    }.unsafeToFuture().asTwitter
+    }.asTFuture
   }
 
   def createDislike(): Endpoint[Preference] = post("dislike" :: jsonBody[Preference]) { preference: Preference =>
@@ -157,18 +153,18 @@ object Api {
         constraintViolation => BadRequest(new RuntimeException(constraintViolation.message)),
         preference => Ok(preference)
       )
-    }.unsafeToFuture().asTwitter
+    }.asTFuture
   }
 
   def deleteDislike(): Endpoint[Unit] = delete("dislike" :: path[String] :: path[String]) { (personId:String, restaurantId:String) =>
     PreferenceDAO.deleteDislike(personId, restaurantId).map{
       case 0 => NotFound(new RuntimeException(s"Dislike $personId / $restaurantId is not found"))
       case _ => NoContent[Unit]
-    }.unsafeToFuture().asTwitter
+    }.asTFuture
   }
 
   def getDislikes(): Endpoint[List[Preference]] = get("dislike" :: "person" :: path[String]) { personId: String =>
-    PreferenceDAO.getDislikesByPerson(personId).map(Ok).unsafeToFuture().asTwitter
+    PreferenceDAO.getDislikesByPerson(personId).map(Ok).asTFuture
   }
 
   def getDislike(): Endpoint[Preference] = get("dislike" :: path[String] :: path[String]) { (personId: String, restaurantId: String)=>
@@ -176,23 +172,23 @@ object Api {
       case Some(preference) => Ok(preference)
       case None =>
         NotFound(new RuntimeException(s"Dislike $personId / $restaurantId is not found"))
-    }.unsafeToFuture().asTwitter
+    }.asTFuture
   }
 
 ////Transaction API
   def createTransaction(): Endpoint[Transaction] = post(jsonBody[Transaction]) { transaction: Transaction =>
-    TransactionDAO.createTransaction(transaction).map(Ok).unsafeToFuture().asTwitter
+    TransactionDAO.createTransaction(transaction).map(Ok).asTFuture
   }
 
   def getTransaction(): Endpoint[Option[Transaction]] = get(path[String]) { transactionId: String =>
-    TransactionDAO.getTransaction(transactionId).map(Ok).unsafeToFuture().asTwitter
+    TransactionDAO.getTransaction(transactionId).map(Ok).asTFuture
   }
 
   def deleteTransaction(): Endpoint[Unit] = delete(path[String]) { transactionId:String =>
     TransactionDAO.deleteTransaction(transactionId).map{
       case 0 => NotFound(new RuntimeException(s"TransactionId $transactionId is not found"))
       case _ => NoContent[Unit]
-    }.unsafeToFuture().asTwitter
+    }.asTFuture
   }
 
   val v1TransactionRoutes =
