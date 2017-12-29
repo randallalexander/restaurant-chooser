@@ -5,7 +5,7 @@ import com.twitter.util.{Future => TFuture, Promise => TPromise}
 
 
 object IOTaskConversion {
-  implicit class RichTask[A](val t: IO[A]) extends AnyVal {
+  implicit class RichTask[A](t: => IO[A]) {
     def asTFuture:TFuture[A] = {
       val p: TPromise[A] = TPromise()
       t.unsafeRunAsync{
@@ -20,7 +20,7 @@ object IOTaskConversion {
   }
 
 
-  implicit class RichTFuture[A](val f: TFuture[A]) extends AnyVal {
+  implicit class RichTFuture[A](f: => TFuture[A]) {
     def asIO: IO[A] = {
       IO.async {
         cb =>

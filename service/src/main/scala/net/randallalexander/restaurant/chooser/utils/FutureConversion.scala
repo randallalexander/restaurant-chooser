@@ -8,10 +8,12 @@ import scala.util.{Failure, Success}
   Taken from:
     https://github.com/finagle/finch/blob/master/docs/cookbook.md#converting-between-scala-futures-and-twitter-futures
   Which I believe is from twitter bijection
+
+  I have done minor modifications
  */
 object FutureConversion {
 
-  implicit class RichTFuture[A](val f: TFuture[A]) extends AnyVal {
+  implicit class RichTFuture[A](f: => TFuture[A]) {
     def asScala: SFuture[A] = {
       val p: SPromise[A] = SPromise()
       f.respond {
@@ -27,7 +29,7 @@ object FutureConversion {
     }
   }
 
-  implicit class RichSFuture[A](val f: SFuture[A]) extends AnyVal {
+  implicit class RichSFuture[A](f: => SFuture[A]) {
     def asTwitter(implicit e: ExecutionContext): TFuture[A] = {
       val p: TPromise[A] = new TPromise[A]
       f.onComplete {
